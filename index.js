@@ -49,7 +49,7 @@ async function main() {
         } else {
           ctx.reply('Something went wrong 🙃');
         }
-        console.log(details);
+        console.log(link);
       } else {
         ctx.reply("Please send a valid Terabox link.");
       }
