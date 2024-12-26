@@ -8,7 +8,7 @@ async function main() {
 
   bot.start(async (ctx) => {
     try {
-      ctx.reply(
+      ctx.reply_photo(
          photo = 'https://i.ibb.co/2WX4N5g/images-1-5.jpg',
          caption = `Hi ${ctx.message.from.first_name},\n\nOnline play without any app.\n\nSend any terabox link to Play Online.`,
          Markup.inlineKeyboard([
@@ -41,7 +41,7 @@ async function main() {
         const link = await link1.replace('/s/', 'https://terabisgram.blogspot.com/?url=');
         if (link) {
           try {
-            ctx.reply(
+            ctx.reply_photo(
               photo = 'https://i.ibb.co/YWZGgY8/IMG-20241226-163121.jpg',
               caption = `| How To Watch Video, Clck here | \n\n| Join this channel for more Updates\n👉 @Tera_online_play |\n\nYour 📽️video link 👇👇`, 
           Markup.inlineKeyboard([
