@@ -9,10 +9,10 @@ async function main() {
   bot.start(async (ctx) => {
     try {
       ctx.reply(
-        `Hi ${ctx.message.from.first_name},\n\nI can Download Files from Terabox.\n\nMade with ❤️ by @botcodes123\n\nSend any terabox link to download.`,
+        `Hi ${ctx.message.from.first_name},\n\nOnline play without any app.\n\nMade with ❤️ by @mr_attherate\n\nSend any terabox link to View.`,
         Markup.inlineKeyboard([
-          Markup.button.url(" Channel", "https://t.me/botcodes123"),
-          Markup.button.url("Report bug", "https://t.me/Armanidrisi_bot"),
+          Markup.button.url("Channel", "https://t.me/Tera_online_play"),
+     
         ]),
       );
     } catch (e) {
@@ -33,6 +33,7 @@ async function main() {
         // ctx.reply(linkID)
 
         const details = await getDetails(messageText);
+        const link = await 
         if (details && details.direct_link) {
           try {
             ctx.reply(`Sending Files Please Wait.!!`);
