@@ -32,19 +32,20 @@ async function main() {
 
         // ctx.reply(linkID)
 
-        const details = await getDetails(messageText);
-        const link = await 
-        if (details && details.direct_link) {
+       // const details = await getDetails(messageText);
+        const link1 = await  messageText.replace(/^.*\/s\//, '/s/');
+        const link = await link1.replace('/s/', '');
+        if (link) {
           try {
             ctx.reply(`Sending Files Please Wait.!!`);
-            sendFile(details.direct_link, ctx);
+            sendFile(link, ctx);
           } catch (e) {
             console.error(e); // Log the error for debugging
           }
         } else {
           ctx.reply('Something went wrong 🙃');
         }
-        console.log(details);
+        console.log(link);
       } else {
         ctx.reply("Please send a valid Terabox link.");
       }
