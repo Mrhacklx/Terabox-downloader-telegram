@@ -23,12 +23,12 @@ async function main() {
   bot.on("message", async (ctx) => {
     if (ctx.message && ctx.message.text) {
       const messageText = ctx.message.text;
-      if (
+      if ((
         messageText.includes("terabox.com") ||
         messageText.includes("teraboxapp.com") ||
         messageText.includes("1024terabox.com")  ||
-        messageText.includes("teraboxlink.com")  ||
-        messageText.includes("terabox") 
+        messageText.includes("tera"))  &&
+        messageText.includes("/s/") 
       ) {
         //const parts = messageText.split("/");
         //const linkID = parts[parts.length - 1];
