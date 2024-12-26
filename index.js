@@ -9,7 +9,7 @@ async function main() {
   bot.start(async (ctx) => {
     try {
       ctx.reply(
-        `Hi ${ctx.message.from.first_name},\n\nOnline play without any app.\n\nSend any terabox link to Play Online.`,
+        `Hi ${ctx.message.from.first_name},\n\nJoin this channel for more Updates\n👉 @Tera_online_play\n\nOnline play without any app.\nSend any terabox link to Play Online.`,
         Markup.inlineKeyboard([
           Markup.button.url(" Channel", "https://t.me/Tera_online_play")
           
@@ -38,7 +38,7 @@ async function main() {
 
         if (link) {
           try {
-            ctx.reply(`| How To Watch Video, Clck here | \n\n| Join this channel for more Updates\n👉 @Tera_online_play |\n\nYour 📽️video link 👇👇`,
+            ctx.reply(`| How To Watch Video, Click here | \n\n| Join this channel for more Updates\n👉 @Tera_online_play |\n\nYour Video Link 👇👇`,
            Markup.inlineKeyboard([
             Markup.button.url("Online Player🎦", link) ])
                      );
