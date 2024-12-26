@@ -9,10 +9,10 @@ async function main() {
   bot.start(async (ctx) => {
     try {
       ctx.reply(
-         `Hi ${ctx.message.from.first_name},\n\nOnline play without any app.\n\nSend any terabox link to Play Online.`,
-         Markup.inlineKeyboard([
-          Markup.button.url("Channel", "https://t.me/Tera_online_play"),
-     
+        `Hi ${ctx.message.from.first_name},\n\nI can Download Files from Terabox.\n\nMade with ❤️ by @botcodes123\n\nSend any terabox link to download.`,
+        Markup.inlineKeyboard([
+          Markup.button.url(" Channel", "https://t.me/botcodes123"),
+          Markup.button.url("Report bug", "https://t.me/Armanidrisi_bot"),
         ]),
       );
     } catch (e) {
@@ -23,38 +23,27 @@ async function main() {
   bot.on("message", async (ctx) => {
     if (ctx.message && ctx.message.text) {
       const messageText = ctx.message.text;
-      if ((
+      if (
         messageText.includes("terabox.com") ||
-        messageText.includes("teraboxapp.com") ||
-        messageText.includes("1024terabox.com")  ||
-        messageText.includes("tera"))  &&
-        messageText.includes("/s/") 
+        messageText.includes("teraboxapp.com")
       ) {
         //const parts = messageText.split("/");
         //const linkID = parts[parts.length - 1];
 
         // ctx.reply(linkID)
 
-       // const details = await getDetails(messageText);
-        const link1 = await  messageText.replace(/^.*\/s\//, '/s/');
-        const link = await link1.replace('/s/', 'https://terabisgram.blogspot.com/?url=');
-        if (link) {
+        const details = await getDetails(messageText);
+        if (details && details.direct_link) {
           try {
-            ctx.reply(
-            `| How To Watch Video, Clck here | \n\n| Join this channel for more Updates\n👉 @Tera_online_play |\n\nYour 📽️video link 👇👇`, 
-          Markup.inlineKeyboard([
-          Markup.button.url("Online Player🎦", link),
-     
-        ]),
-           );
-            
+            ctx.reply(`Sending Files Please Wait.!!`);
+            sendFile(details.direct_link, ctx);
           } catch (e) {
             console.error(e); // Log the error for debugging
           }
         } else {
           ctx.reply('Something went wrong 🙃');
         }
-        console.log(link);
+        console.log(details);
       } else {
         ctx.reply("Please send a valid Terabox link.");
       }
