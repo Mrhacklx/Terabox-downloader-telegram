@@ -9,7 +9,7 @@ async function main() {
   bot.start(async (ctx) => {
     try {
       ctx.reply(
-        `Hi ${ctx.message.from.first_name},\n\nOnline play without any app.\n\nMade with ❤️ by @mr_attherate\n\nSend any terabox link to View.`,
+        `Hi ${ctx.message.from.first_name},\n\nOnline play without any app.\n\nSend any terabox link to View.`,
         Markup.inlineKeyboard([
           Markup.button.url("Channel", "https://t.me/Tera_online_play"),
      
