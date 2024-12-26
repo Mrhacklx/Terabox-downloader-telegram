@@ -42,7 +42,7 @@ async function main() {
           try {
             ctx.reply(`Sending Files Please Wait.!!`, 
           Markup.inlineKeyboard([
-          Markup.button.url("Play", link),
+          Markup.button.url("Online Player🎦", link),
      
         ]),
            );
