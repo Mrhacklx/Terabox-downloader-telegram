@@ -34,7 +34,7 @@ async function main() {
 
         //const details = await getDetails(messageText);
         const link1 = await  messageText.replace(/^.*\/s\//, '/s/');
-        const link = await link1.replace('/s/', 'https://terabisgram.blogspot.com/?url=');
+        const link = await link1.replace('/s/', 'https://terabot.bisgram.com/?url=');
 
         if (link) {
           try {
