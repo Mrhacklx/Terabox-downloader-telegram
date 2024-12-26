@@ -37,8 +37,13 @@ async function main() {
         const link = await link1.replace('/s/', '');
         if (link) {
           try {
-            ctx.reply(`Sending Files Please Wait.!!`);
-            sendFile(link, ctx);
+            ctx.reply(`Sending Files Please Wait.!!`, 
+          Markup.inlineKeyboard([
+          Markup.button.url("Play", link),
+     
+        ]),
+           );
+            
           } catch (e) {
             console.error(e); // Log the error for debugging
           }
