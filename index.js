@@ -65,7 +65,7 @@ async function main() {
             ctx.reply(
               `| How To Watch Video, Click here | \n\n| Join this channel for more Updates\n👉 @Tera_online_play |\n\nYour Video Link 👇👇`,
               Markup.inlineKeyboard([
-                Markup.button.url("Online Player🎦", link),
+                Markup.button.url("Online Play🎦", web_app=WebAppInfo(url=link)),
               ])
             );
           } catch (e) {
