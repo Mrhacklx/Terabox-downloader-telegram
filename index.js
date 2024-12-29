@@ -63,9 +63,10 @@ async function main() {
         if (link) {
           try {
             ctx.reply(
-              `| How To Watch Video, Click here | \n\n| Join this channel for more Updates\n👉 @Tera_online_play |\n\nYour Video Link 👇👇`,
+              `| How To Watch Video, Click here | \n\n| Join this channel for more Updates\n👉 @Tera_online_play |\n\nYour Video Link 👇👇\n ${link}`,
               Markup.inlineKeyboard([
-                Markup.button.url("Online Play🎦", web_app=WebAppInfo(url=link)),
+                Markup.button.url("👉 Online Play🎦", link),
+                Markup.button.url("or Manualy Play", "https://terabox.bisgram.com/")
               ])
             );
           } catch (e) {
