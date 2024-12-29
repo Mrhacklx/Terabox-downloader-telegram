@@ -58,7 +58,7 @@ async function main() {
       const messageText = ctx.message.text;
       if (messageText.includes("terabox") && messageText.includes("/s/")) {
         const link1 = await messageText.replace(/^.*\/s\//, "/s/");
-        const link = await link1.replace("/s/", "https://terabox.bisgram.com/?url=");
+        const link = await link1.replace("/s/", "https://terabot.bisgram.com/?url=");
 
         if (link) {
           try {
@@ -66,7 +66,7 @@ async function main() {
               `| How To Watch Video, Click here | \n\n| Join this channel for more Updates\n👉 @Tera_online_play |\n\nYour Video Link 👇👇\n ${link}`,
               Markup.inlineKeyboard([
                 Markup.button.url("👉 Online Play🎦", link),
-                Markup.button.url("or Manualy Play", "https://terabox.bisgram.com/")
+                Markup.button.url("or Manualy Play", "https://terabot.bisgram.com/")
               ])
             );
           } catch (e) {
