@@ -24,7 +24,7 @@ async function main() {
       await ctx.reply(
         `Hi ${ctx.message.from.first_name},\n\nPlease join our channel first to use the bot:\n👉 @Tera_online_play`,
         Markup.inlineKeyboard([
-          Markup.button.url("Join Channel", "https://t.me/Tera_online_play"),
+          Markup.button.url("👉 Join Channel", "https://t.me/Tera_online_play"),
         ])
       );
       return; // Exit after sending the join message to avoid infinite loop
@@ -34,7 +34,7 @@ async function main() {
       ctx.reply(
         `Hi ${ctx.message.from.first_name},\n\nWelcome! Send any Terabox link to play online.`,
         Markup.inlineKeyboard([
-          Markup.button.url("Channel", "https://t.me/Tera_online_play"),
+          Markup.button.url("💋 For Terabox Link 🔞", "https://t.me/+2bhsx2ti0CsyYmM1"),
         ])
       );
     } catch (e) {
