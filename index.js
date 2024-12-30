@@ -18,14 +18,14 @@ async function main() {
 
   // Start command
   bot.start(async (ctx) => {
-    while (!(await hasJoinedChannel(ctx))) {
+    if (!(await hasJoinedChannel(ctx))) {
       await ctx.reply(
         `Hi ${ctx.message.from.first_name},\n\nPlease join our channel first to use the bot:\n👉 @Tera_online_play`,
         Markup.inlineKeyboard([
           Markup.button.url("👉 Join Channel", "https://t.me/Tera_online_play"),
         ])
       );
-      return; // Exit after sending the join message to avoid infinite loop
+      return;
     }
 
     try {
@@ -36,46 +36,39 @@ async function main() {
         ])
       );
     } catch (e) {
-      console.error(e);
+      console.error("Error sending welcome message:", e);
     }
   });
 
   // Handle all messages
   bot.on("message", async (ctx) => {
-    while (!(await hasJoinedChannel(ctx))) {
+    if (!(await hasJoinedChannel(ctx))) {
       await ctx.reply(
         `Hi ${ctx.message.from.first_name},\n\nPlease join our channel first to use the bot:\n👉 @Tera_online_play`,
         Markup.inlineKeyboard([
           Markup.button.url("Join Channel", "https://t.me/Tera_online_play"),
         ])
       );
-      return; // Exit after sending the join message to avoid infinite loop
+      return;
     }
 
-    let messageText = "";
-    const linkRegex = /(https?:\/\/[^\s]+)/g;
+    try {
+      let messageText = ctx.message.caption || ctx.message.text || "";
 
-    // Check if the message contains text or caption
-    if (ctx.message.caption) {
-      messageText = ctx.message.caption;
-    } else if (ctx.message.text) {
-      messageText = ctx.message.text;
-    }
+      // Regex to extract URLs
+      const linkRegex = /(https?:\/\/[^\s]+)/g;
+      const links = messageText.match(linkRegex);
 
-    // Extract link from the message
-    const links = messageText.match(linkRegex);
+      if (links && links.some((link) => link.includes("terabox") && link.includes("/s/"))) {
+        const extractedLink = links.find((link) => link.includes("terabox") && link.includes("/s/"));
+        const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
+        const link = link1.replace("/s/", "https://terabot.bisgram.com/?url=");
 
-    if (links && links.some((link) => link.includes("terabox") && link.includes("/s/"))) {
-      const extractedLink = links.find((link) => link.includes("terabox") && link.includes("/s/"));
-      const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
-      const link = link1.replace("/s/", "https://terabot.bisgram.com/?url=");
-
-      try {
         const responseText = `| How To Watch Video, Click here | \n\n| Join this channel for more Updates\n👉 @Tera_online_play |\n\nYour Video Link 👇👇\n ${link}`;
 
-        // Check if the original message has media and reply accordingly
+        // Check and handle media (photo or video)
         if (ctx.message.photo) {
-          const photo = ctx.message.photo[ctx.message.photo.length - 1].file_id; // Get the highest resolution photo
+          const photo = ctx.message.photo[ctx.message.photo.length - 1].file_id;
           await ctx.replyWithPhoto(photo, {
             caption: responseText,
             reply_markup: Markup.inlineKeyboard([
@@ -84,7 +77,7 @@ async function main() {
             ])
           });
         } else if (ctx.message.video) {
-          const video = ctx.message.video.file_id; // Get the video file ID
+          const video = ctx.message.video.file_id;
           await ctx.replyWithVideo(video, {
             caption: responseText,
             reply_markup: Markup.inlineKeyboard([
@@ -99,12 +92,12 @@ async function main() {
             Markup.button.url("or Manualy Play", "https://terabot.bisgram.com/")
           ]));
         }
-      } catch (e) {
-        console.error(e); // Log the error for debugging
-        ctx.reply("Something went wrong 🙃");
+      } else {
+        ctx.reply("Please send a valid Terabox link.");
       }
-    } else {
-      ctx.reply("Please send a valid Terabox link.");
+    } catch (error) {
+      console.error("Error processing message:", error);
+      ctx.reply("Something went wrong. Please try again later.");
     }
   });
 
