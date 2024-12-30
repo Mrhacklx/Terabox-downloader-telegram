@@ -64,7 +64,7 @@ async function main() {
         const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
         const link = link1.replace("/s/", "https://terabot.bisgram.com/?url=");
 
-        const responseText = `| More videos link direct play \n👉 https://t.me/+iBf37KflVq1jYjk1 |\n\nYour Video Link 👇👇\n ${link}`;
+        const responseText = `| More videos link direct play \n👉 https://t.me/+x4rupH5fazlmYjI1 |\n\nYour Video Link 👇👇\n ${link}`;
         const responseText1 = `🔰𝙁𝙐𝙇𝙇 𝙑𝙄𝘿𝙀𝙊 🎥👇👇 \n${link} \n\nBACKUP:-\nhttps://t.me/+JZHc9IszlWE1Mzhl \n\n♡ ㅤ   ❍ㅤ     ⌲ \n\nLike   React   share`;
         // Check and handle media (photo or video)
         if (ctx.message.photo) {
