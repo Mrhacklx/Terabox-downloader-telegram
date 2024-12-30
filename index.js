@@ -64,13 +64,13 @@ async function main() {
         const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
         const link = link1.replace("/s/", "https://terabot.bisgram.com/?url=");
 
-        const responseText = `| How To Watch Video, Click here | \n\n| Join this channel for more Updates\n👉 @Tera_online_play |\n\nYour Video Link 👇👇\n ${link}`;
-
+        const responseText = `| More videos link direct play \n👉 https://t.me/+iBf37KflVq1jYjk1 |\n\nYour Video Link 👇👇\n ${link}`;
+        const responseText1 = `🔰𝙁𝙐𝙇𝙇 𝙑𝙄𝘿𝙀𝙊 🎥👇👇 \n${link} \n\nBACKUP:-\nhttps://t.me/+JZHc9IszlWE1Mzhl \n\n♡ ㅤ   ❍ㅤ     ⌲ \n\nLike   React   share`;
         // Check and handle media (photo or video)
         if (ctx.message.photo) {
           const photo = ctx.message.photo[ctx.message.photo.length - 1].file_id;
           await ctx.replyWithPhoto(photo, {
-            caption: responseText,
+            caption: responseText1,
             reply_markup: Markup.inlineKeyboard([
               Markup.button.url("👉 Online Play🎦", link),
               Markup.button.url("or Manualy Play", "https://terabot.bisgram.com/")
@@ -79,7 +79,7 @@ async function main() {
         } else if (ctx.message.video) {
           const video = ctx.message.video.file_id;
           await ctx.replyWithVideo(video, {
-            caption: responseText,
+            caption: responseText1,
             reply_markup: Markup.inlineKeyboard([
               Markup.button.url("👉 Online Play🎦", link),
               Markup.button.url("or Manualy Play", "https://terabot.bisgram.com/")
