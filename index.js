@@ -1,7 +1,5 @@
 async function main() {
   const { Telegraf, Markup } = require("telegraf");
-  const { getDetails } = require("./api");
-  const { sendFile } = require("./utils");
   const express = require("express");
 
   const bot = new Telegraf(process.env.BOT_TOKEN);
@@ -54,31 +52,59 @@ async function main() {
       return; // Exit after sending the join message to avoid infinite loop
     }
 
-    if (ctx.message && ctx.message.text) {
-      const messageText = ctx.message.text;
-      if (messageText.includes("terabox") && messageText.includes("/s/")) {
-        const link1 = await messageText.replace(/^.*\/s\//, "/s/");
-        const link = await link1.replace("/s/", "https://terabot.bisgram.com/?url=");
+    let messageText = "";
+    const linkRegex = /(https?:\/\/[^\s]+)/g;
 
-        if (link) {
-          try {
-            ctx.reply(
-              `| How To Watch Video, Click here | \n\n| Join this channel for more Updates\n👉 @Tera_online_play |\n\nYour Video Link 👇👇\n ${link}`,
-              Markup.inlineKeyboard([
-                Markup.button.url("👉 Online Play🎦", link),
-                Markup.button.url("or Manualy Play", "https://terabot.bisgram.com/")
-              ])
-            );
-          } catch (e) {
-            console.error(e); // Log the error for debugging
-          }
+    // Check if the message contains text or caption
+    if (ctx.message.caption) {
+      messageText = ctx.message.caption;
+    } else if (ctx.message.text) {
+      messageText = ctx.message.text;
+    }
+
+    // Extract link from the message
+    const links = messageText.match(linkRegex);
+
+    if (links && links.some((link) => link.includes("terabox") && link.includes("/s/"))) {
+      const extractedLink = links.find((link) => link.includes("terabox") && link.includes("/s/"));
+      const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
+      const link = link1.replace("/s/", "https://terabot.bisgram.com/?url=");
+
+      try {
+        const responseText = `| How To Watch Video, Click here | \n\n| Join this channel for more Updates\n👉 @Tera_online_play |\n\nYour Video Link 👇👇\n ${link}`;
+
+        // Check if the original message has media and reply accordingly
+        if (ctx.message.photo) {
+          const photo = ctx.message.photo[ctx.message.photo.length - 1].file_id; // Get the highest resolution photo
+          await ctx.replyWithPhoto(photo, {
+            caption: responseText,
+            reply_markup: Markup.inlineKeyboard([
+              Markup.button.url("👉 Online Play🎦", link),
+              Markup.button.url("or Manualy Play", "https://terabot.bisgram.com/")
+            ])
+          });
+        } else if (ctx.message.video) {
+          const video = ctx.message.video.file_id; // Get the video file ID
+          await ctx.replyWithVideo(video, {
+            caption: responseText,
+            reply_markup: Markup.inlineKeyboard([
+              Markup.button.url("👉 Online Play🎦", link),
+              Markup.button.url("or Manualy Play", "https://terabot.bisgram.com/")
+            ])
+          });
         } else {
-          ctx.reply("Something went wrong 🙃");
+          // If no media, just reply with the link
+          await ctx.reply(responseText, Markup.inlineKeyboard([
+            Markup.button.url("👉 Online Play🎦", link),
+            Markup.button.url("or Manualy Play", "https://terabot.bisgram.com/")
+          ]));
         }
-        console.log(link);
-      } else {
-        ctx.reply("Please send a valid Terabox link.");
+      } catch (e) {
+        console.error(e); // Log the error for debugging
+        ctx.reply("Something went wrong 🙃");
       }
+    } else {
+      ctx.reply("Please send a valid Terabox link.");
     }
   });
 
