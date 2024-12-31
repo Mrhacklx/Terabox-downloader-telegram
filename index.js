@@ -59,7 +59,7 @@ async function main() {
       const linkRegex = /(https?:\/\/[^\s]+)/g;
       const links = messageText.match(linkRegex);
 
-      if (links && links.some((link) => link.includes("terabox") && link.includes("/s/"))) {
+      if (links && links.some((link) => link.includes("tera") && link.includes("/s/"))) {
         const extractedLink = links.find((link) => link.includes("terabox") && link.includes("/s/"));
         const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
         const link = link1.replace("/s/", "https://terabot.bisgram.com/?url=");
