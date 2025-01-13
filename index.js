@@ -94,7 +94,7 @@ Like   React   Share
       console.error(e);
     }
   });
-
+/*
 bot.on("message", async (ctx) => {
   if (!(await hasJoinedChannel(ctx))) {
     await ctx.reply(
@@ -108,7 +108,7 @@ bot.on("message", async (ctx) => {
 
   await handleMediaMessage(ctx, Markup);
 });
-
+*/
 const fs = require("fs");
 
 
