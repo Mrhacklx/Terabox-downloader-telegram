@@ -109,8 +109,6 @@ bot.on("message", async (ctx) => {
   await handleMediaMessage(ctx, Markup);
 });
 
-
-const { Telegraf, Markup } = require("telegraf");
 const fs = require("fs");
 
 const bot = new Telegraf(process.env.BOT_TOKEN);
