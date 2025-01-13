@@ -110,6 +110,159 @@ bot.on("message", async (ctx) => {
 });
 
 
+const fs = require("fs");
+
+
+let sourceChannel = null;
+let targetChannel = null;
+let scheduleTimes = [];
+let sentMessages = new Set();
+
+// Persistent storage for sent messages
+if (fs.existsSync("sentMessages.json")) {
+  sentMessages = new Set(JSON.parse(fs.readFileSync("sentMessages.json")));
+}
+
+// Delay function
+function delay(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Mock handleMediaMessage function (customize this logic as needed)
+async function handleMediaMessage(ctx, Markup) {
+  const { message } = ctx;
+  let customMessage = {
+    text: message.text || "",
+    caption: message.caption || "",
+    markup: Markup.inlineKeyboard([
+      Markup.button.url("Visit Us", "https://example.com"),
+    ]),
+  };
+
+  // Customize the message logic here
+  if (message.photo) {
+    customMessage.type = "photo";
+    customMessage.fileId = message.photo[message.photo.length - 1].file_id;
+  } else if (message.video) {
+    customMessage.type = "video";
+    customMessage.fileId = message.video.file_id;
+  } else {
+    customMessage.type = "text";
+  }
+
+  return customMessage;
+}
+
+// Commands to set configuration
+bot.command("setsource", (ctx) => {
+  const source = ctx.message.text.split(" ")[1];
+  if (!source) {
+    return ctx.reply("Please provide the source channel ID or username. Example: /setsource @source_channel");
+  }
+  sourceChannel = source;
+  ctx.reply(`Source channel set to: ${source}`);
+});
+
+bot.command("settarget", (ctx) => {
+  const target = ctx.message.text.split(" ")[1];
+  if (!target) {
+    return ctx.reply("Please provide the target channel ID or username. Example: /settarget @target_channel");
+  }
+  targetChannel = target;
+  ctx.reply(`Target channel set to: ${target}`);
+});
+
+bot.command("setschedule", (ctx) => {
+  const times = ctx.message.text.split(" ").slice(1);
+  if (times.length === 0) {
+    return ctx.reply("Please provide the schedule times. Example: /setschedule 12:00 18:00 06:00");
+  }
+  scheduleTimes = times;
+  ctx.reply(`Schedule times set to: ${times.join(", ")}`);
+});
+
+bot.command("status", (ctx) => {
+  ctx.reply(`
+**Current Configuration:**
+- Source Channel: ${sourceChannel || "Not Set"}
+- Target Channel: ${targetChannel || "Not Set"}
+- Schedule Times: ${scheduleTimes.length > 0 ? scheduleTimes.join(", ") : "Not Set"}
+- Messages Forwarded: ${sentMessages.size}
+  `);
+});
+
+// Forward command with customization logic
+bot.command("forward", async (ctx) => {
+  if (!sourceChannel || !targetChannel) {
+    return ctx.reply("Please configure the source and target channels first using /setsource and /settarget.");
+  }
+  if (scheduleTimes.length === 0) {
+    return ctx.reply("Please configure schedule times using /setschedule.");
+  }
+
+  ctx.reply("Forwarding job scheduled. Messages will be forwarded at the specified times.");
+
+  while (true) {
+    const now = new Date();
+    const currentTime = `${now.getHours()}:${now.getMinutes().toString().padStart(2, "0")}`;
+
+    if (scheduleTimes.includes(currentTime)) {
+      try {
+        // Fetch messages from the source channel
+        const updates = await ctx.telegram.getChatHistory(sourceChannel, {
+          limit: 50,
+        });
+
+        const messagesToSend = updates.messages.filter(
+          (msg) => !sentMessages.has(msg.message_id)
+        );
+
+        for (const message of messagesToSend) {
+          // Wrap the message in a custom context
+          const messageCtx = { message };
+          const customizedMessage = await handleMediaMessage(messageCtx, Markup);
+
+          if (customizedMessage.type === "photo") {
+            await ctx.telegram.sendPhoto(targetChannel, customizedMessage.fileId, {
+              caption: customizedMessage.caption,
+              reply_markup: customizedMessage.markup,
+            });
+          } else if (customizedMessage.type === "video") {
+            await ctx.telegram.sendVideo(targetChannel, customizedMessage.fileId, {
+              caption: customizedMessage.caption,
+              reply_markup: customizedMessage.markup,
+            });
+          } else {
+            await ctx.telegram.sendMessage(targetChannel, customizedMessage.text, {
+              reply_markup: customizedMessage.markup,
+            });
+          }
+
+          sentMessages.add(message.message_id);
+          fs.writeFileSync(
+            "sentMessages.json",
+            JSON.stringify([...sentMessages])
+          );
+        }
+      } catch (error) {
+        console.error("Error forwarding messages:", error);
+      }
+
+      await delay(60000); // Wait for a minute before re-checking
+    }
+
+    await delay(1000); // Short delay to avoid busy looping
+  }
+});
+
+// Graceful shutdown
+process.once("SIGINT", () => bot.stop("SIGINT"));
+process.once("SIGTERM", () => bot.stop("SIGTERM"));
+
+bot.launch();
+
+
+
   const app = express();
   // Set the bot API endpoint
   app.use(await bot.createWebhook({ domain: process.env.WEBHOOK_URL }));
