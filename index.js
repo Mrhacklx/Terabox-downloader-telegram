@@ -169,6 +169,13 @@ bot.command("status", (ctx) => {
   `);
 });
 
+   bot.command("reschedule", (ctx) => {
+
+  scheduleTimes = [];
+ 
+  ctx.reply("Your previous Schedule reset successful \nPlease provide new schedule times. Example: /setschedule 12:00 18:00 06:00");
+});
+
   bot.command("reset", (ctx) => {
   sourceChannel = null;
   targetChannel = null;
