@@ -84,17 +84,17 @@ Like   React   Share
   bot.start(async (ctx) => {
     try {
       ctx.reply(
-        `Hi ${ctx.message.from.first_name},\n\nI can Download Files from Terabox.\n\nMade with ❤️ by @botcodes123\n\nSend any terabox link to download.`,
+        `Hi ${ctx.message.from.first_name},\n\nSend any terabox link to Watch.`,
         Markup.inlineKeyboard([
-          Markup.button.url(" Channel", "https://t.me/botcodes123"),
-          Markup.button.url("Report bug", "https://t.me/Armanidrisi_bot"),
+          Markup.button.url(" Channel", "https://t.me/Tera_online_play"),
+          
         ]),
       );
     } catch (e) {
       console.error(e);
     }
   });
-/*
+
 bot.on("message", async (ctx) => {
   if (!(await hasJoinedChannel(ctx))) {
     await ctx.reply(
@@ -108,27 +108,8 @@ bot.on("message", async (ctx) => {
 
   await handleMediaMessage(ctx, Markup);
 });
-*/
-const fs = require("fs");
+/*
 
-
-// Variables to store configuration
-let sourceChannel = null;
-let targetChannel = null;
-let scheduleTimes = [];
-let sentMessages = new Set(); // To track already forwarded messages
-
-// Load sent messages from a file (for persistence across bot restarts)
-if (fs.existsSync("sentMessages.json")) {
-  sentMessages = new Set(JSON.parse(fs.readFileSync("sentMessages.json")));
-}
-
-// Helper function to delay execution
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-// Command to configure source channel
 bot.command("setsource", (ctx) => {
   const source = ctx.message.text.split(" ")[1];
   if (!source) {
@@ -137,125 +118,7 @@ bot.command("setsource", (ctx) => {
   sourceChannel = source;
   ctx.reply(`Source channel set to: ${source}`);
 });
-
-// Command to configure target channel
-bot.command("settarget", (ctx) => {
-  const target = ctx.message.text.split(" ")[1];
-  if (!target) {
-    return ctx.reply("Please provide the target channel ID or username. Example: /settarget @target_channel");
-  }
-  targetChannel = target;
-  ctx.reply(`Target channel set to: ${target}`);
-});
-
-// Command to configure schedule times
-bot.command("setschedule", (ctx) => {
-  const times = ctx.message.text.split(" ").slice(1);
-  if (times.length === 0) {
-    return ctx.reply("Please provide the schedule times. Example: /setschedule 12:00 18:00 06:00");
-  }
-  scheduleTimes = times;
-  ctx.reply(`Schedule times set to: ${times.join(", ")}`);
-});
-
-// Command to display the current configuration
-bot.command("status", (ctx) => {
-  ctx.reply(`
-**Current Configuration:**
-- Source Channel: ${sourceChannel || "Not Set"}
-- Target Channel: ${targetChannel || "Not Set"}
-- Schedule Times: ${scheduleTimes.length > 0 ? scheduleTimes.join(", ") : "Not Set"}
-- Messages Forwarded: ${sentMessages.size}
-  `);
-});
-
-
-  bot.command("reset", (ctx) => {
-  sourceChannel = null;
-  targetChannel = null;
-  scheduleTimes = [];
-  sentMessages = new Set();
-
-  // Clear the persistent storage for sent messages
-  if (fs.existsSync("sentMessages.json")) {
-    fs.unlinkSync("sentMessages.json");
-  }
-
-  ctx.reply("All settings have been reset to their default values.");
-});
-
-// Command to start forwarding messages
-bot.command("forward", async (ctx) => {
-  if (!sourceChannel || !targetChannel) {
-    return ctx.reply("Please configure the source and target channels first using /setsource and /settarget.");
-  }
-  if (scheduleTimes.length === 0) {
-    return ctx.reply("Please configure schedule times using /setschedule.");
-  }
-
-  ctx.reply("Forwarding job scheduled. Messages will be forwarded at the specified times.");
-
-  while (true) {
-    const now = new Date();
-    const currentTime = `${now.getHours()}:${now.getMinutes().toString().padStart(2, "0")}`;
-
-    if (scheduleTimes.includes(currentTime)) {
-      try {
-        const updates = await ctx.telegram.getChatHistory(sourceChannel, {
-          limit: 50,
-        });
-
-        const messagesToSend = updates.messages.filter((msg) => !sentMessages.has(msg.message_id));
-
-        for (const message of messagesToSend) {
-          const isMedia = !!(message.photo || message.video);
-
-          if (isMedia) {
-            // Handle media messages
-            const mediaType = message.photo ? "photo" : "video";
-            const fileId = message.photo
-              ? message.photo[message.photo.length - 1].file_id
-              : message.video.file_id;
-
-            await ctx.telegram.sendMediaGroup(targetChannel, [
-              {
-                type: mediaType,
-                media: fileId,
-                caption: message.caption || "",
-              },
-            ]);
-          } else {
-            // Handle text messages
-            await ctx.telegram.sendMessage(targetChannel, message.text || "No text content");
-          }
-
-          sentMessages.add(message.message_id);
-        }
-
-        // Save sentMessages to a file for persistence
-        fs.writeFileSync("sentMessages.json", JSON.stringify([...sentMessages]));
-
-        ctx.reply(`Forwarded ${messagesToSend.length} messages to ${targetChannel} at ${currentTime}`);
-      } catch (error) {
-        console.error("Error forwarding messages:", error);
-        ctx.reply("An error occurred while forwarding messages.");
-      }
-
-      // Wait for 1 minute to avoid re-sending messages in the same minute
-      await delay(60000);
-    }
-
-    // Delay the loop to avoid excessive CPU usage
-    await delay(1000);
-  }
-});
-
-// Start the bot
-bot.launch().then(() => console.log("Bot started"));
-
-// Graceful stop
-process.once("SIGINT", () => bot.stop("SIGINT"));
-process.once("SIGTERM", () => bot.stop("SIGTERM"));
+*/
 
 
   const app = express();
