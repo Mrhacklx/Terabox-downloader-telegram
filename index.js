@@ -169,6 +169,20 @@ bot.command("status", (ctx) => {
   `);
 });
 
+  bot.command("reset", (ctx) => {
+  sourceChannel = null;
+  targetChannel = null;
+  scheduleTimes = [];
+  sentMessages = new Set();
+
+  // Clear the persistent storage for sent messages
+  if (fs.existsSync("sentMessages.json")) {
+    fs.unlinkSync("sentMessages.json");
+  }
+
+  ctx.reply("All settings have been reset to their default values.");
+});
+
 // Command to start forwarding messages
 bot.command("forward", async (ctx) => {
   if (!sourceChannel || !targetChannel) {
