@@ -110,50 +110,28 @@ bot.on("message", async (ctx) => {
 });
 
 
+const { Telegraf, Markup } = require("telegraf");
 const fs = require("fs");
 
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
+// Variables to store configuration
 let sourceChannel = null;
 let targetChannel = null;
 let scheduleTimes = [];
-let sentMessages = new Set();
+let sentMessages = new Set(); // To track already forwarded messages
 
-// Persistent storage for sent messages
+// Load sent messages from a file (for persistence across bot restarts)
 if (fs.existsSync("sentMessages.json")) {
   sentMessages = new Set(JSON.parse(fs.readFileSync("sentMessages.json")));
 }
 
-// Delay function
+// Helper function to delay execution
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Mock handleMediaMessage function (customize this logic as needed)
-async function handleMediaMessage(ctx, Markup) {
-  const { message } = ctx;
-  let customMessage = {
-    text: message.text || "",
-    caption: message.caption || "",
-    markup: Markup.inlineKeyboard([
-      Markup.button.url("Visit Us", "https://example.com"),
-    ]),
-  };
-
-  // Customize the message logic here
-  if (message.photo) {
-    customMessage.type = "photo";
-    customMessage.fileId = message.photo[message.photo.length - 1].file_id;
-  } else if (message.video) {
-    customMessage.type = "video";
-    customMessage.fileId = message.video.file_id;
-  } else {
-    customMessage.type = "text";
-  }
-
-  return customMessage;
-}
-
-// Commands to set configuration
+// Command to configure source channel
 bot.command("setsource", (ctx) => {
   const source = ctx.message.text.split(" ")[1];
   if (!source) {
@@ -163,6 +141,7 @@ bot.command("setsource", (ctx) => {
   ctx.reply(`Source channel set to: ${source}`);
 });
 
+// Command to configure target channel
 bot.command("settarget", (ctx) => {
   const target = ctx.message.text.split(" ")[1];
   if (!target) {
@@ -172,6 +151,7 @@ bot.command("settarget", (ctx) => {
   ctx.reply(`Target channel set to: ${target}`);
 });
 
+// Command to configure schedule times
 bot.command("setschedule", (ctx) => {
   const times = ctx.message.text.split(" ").slice(1);
   if (times.length === 0) {
@@ -181,6 +161,7 @@ bot.command("setschedule", (ctx) => {
   ctx.reply(`Schedule times set to: ${times.join(", ")}`);
 });
 
+// Command to display the current configuration
 bot.command("status", (ctx) => {
   ctx.reply(`
 **Current Configuration:**
@@ -191,7 +172,7 @@ bot.command("status", (ctx) => {
   `);
 });
 
-// Forward command with customization logic
+// Command to start forwarding messages
 bot.command("forward", async (ctx) => {
   if (!sourceChannel || !targetChannel) {
     return ctx.reply("Please configure the source and target channels first using /setsource and /settarget.");
@@ -208,59 +189,61 @@ bot.command("forward", async (ctx) => {
 
     if (scheduleTimes.includes(currentTime)) {
       try {
-        // Fetch messages from the source channel
         const updates = await ctx.telegram.getChatHistory(sourceChannel, {
           limit: 50,
         });
 
-        const messagesToSend = updates.messages.filter(
-          (msg) => !sentMessages.has(msg.message_id)
-        );
+        const messagesToSend = updates.messages.filter((msg) => !sentMessages.has(msg.message_id));
 
         for (const message of messagesToSend) {
-          // Wrap the message in a custom context
-          const messageCtx = { message };
-          const customizedMessage = await handleMediaMessage(messageCtx, Markup);
+          const isMedia = !!(message.photo || message.video);
 
-          if (customizedMessage.type === "photo") {
-            await ctx.telegram.sendPhoto(targetChannel, customizedMessage.fileId, {
-              caption: customizedMessage.caption,
-              reply_markup: customizedMessage.markup,
-            });
-          } else if (customizedMessage.type === "video") {
-            await ctx.telegram.sendVideo(targetChannel, customizedMessage.fileId, {
-              caption: customizedMessage.caption,
-              reply_markup: customizedMessage.markup,
-            });
+          if (isMedia) {
+            // Handle media messages
+            const mediaType = message.photo ? "photo" : "video";
+            const fileId = message.photo
+              ? message.photo[message.photo.length - 1].file_id
+              : message.video.file_id;
+
+            await ctx.telegram.sendMediaGroup(targetChannel, [
+              {
+                type: mediaType,
+                media: fileId,
+                caption: message.caption || "",
+              },
+            ]);
           } else {
-            await ctx.telegram.sendMessage(targetChannel, customizedMessage.text, {
-              reply_markup: customizedMessage.markup,
-            });
+            // Handle text messages
+            await ctx.telegram.sendMessage(targetChannel, message.text || "No text content");
           }
 
           sentMessages.add(message.message_id);
-          fs.writeFileSync(
-            "sentMessages.json",
-            JSON.stringify([...sentMessages])
-          );
         }
+
+        // Save sentMessages to a file for persistence
+        fs.writeFileSync("sentMessages.json", JSON.stringify([...sentMessages]));
+
+        ctx.reply(`Forwarded ${messagesToSend.length} messages to ${targetChannel} at ${currentTime}`);
       } catch (error) {
         console.error("Error forwarding messages:", error);
+        ctx.reply("An error occurred while forwarding messages.");
       }
 
-      await delay(60000); // Wait for a minute before re-checking
+      // Wait for 1 minute to avoid re-sending messages in the same minute
+      await delay(60000);
     }
 
-    await delay(1000); // Short delay to avoid busy looping
+    // Delay the loop to avoid excessive CPU usage
+    await delay(1000);
   }
 });
 
-// Graceful shutdown
+// Start the bot
+bot.launch().then(() => console.log("Bot started"));
+
+// Graceful stop
 process.once("SIGINT", () => bot.stop("SIGINT"));
 process.once("SIGTERM", () => bot.stop("SIGTERM"));
-
-bot.launch();
-
 
 
   const app = express();
