@@ -67,6 +67,18 @@ Like   React   Share
     ctx.reply("Please send a valid Terabox link.");
   }
 }
+ async function hasJoinedChannel(ctx) {
+    const channelUsername = "@Tera_online_play";
+    try {
+      const member = await ctx.telegram.getChatMember(channelUsername, ctx.from.id);
+      return ["member", "administrator", "creator"].includes(member.status);
+    } catch (error) {
+      console.error("Error checking channel membership:", error);
+      return false;
+    }
+  }
+
+
 
 
   bot.start(async (ctx) => {
