@@ -7,6 +7,17 @@ async function main() {
 
   const bot = new Telegraf(process.env.BOT_TOKEN);
 
+  async function hasJoinedChannel(ctx) {
+    const channelUsername = "@Tera_online_play";
+    try {
+      const member = await ctx.telegram.getChatMember(channelUsername, ctx.from.id);
+      return ["member", "administrator", "creator"].includes(member.status);
+    } catch (error) {
+      console.error("Error checking channel membership:", error);
+      return false;
+    }
+  }
+
   bot.start(async (ctx) => {
     try {
       ctx.reply(
