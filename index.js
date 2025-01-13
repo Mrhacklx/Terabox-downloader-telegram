@@ -1,10 +1,11 @@
 async function main() {
   const { Telegraf, Markup } = require("telegraf");
+  const { getDetails } = require("./api");
+  const { sendFile } = require("./utils");
   const express = require("express");
 
   const bot = new Telegraf(process.env.BOT_TOKEN);
-
-  // Helper function to check if the user has joined the channel
+  
   async function hasJoinedChannel(ctx) {
     const channelUsername = "@Tera_online_play";
     try {
@@ -15,9 +16,8 @@ async function main() {
       return false;
     }
   }
-
-  // Start command
-  bot.start(async (ctx) => {
+  
+ bot.start(async (ctx) => {
     if (!(await hasJoinedChannel(ctx))) {
       await ctx.reply(
         `Hi ${ctx.message.from.first_name},\n\nPlease join our channel first to use the bot:\n👉 @Tera_online_play`,
@@ -27,8 +27,7 @@ async function main() {
       );
       return;
     }
-
-    try {
+     try {
       ctx.reply(
         `Hi ${ctx.message.from.first_name},\n\nWelcome! Send any Terabox link to play online.`,
         Markup.inlineKeyboard([
@@ -40,7 +39,6 @@ async function main() {
     }
   });
 
-  // Handle all messages
   bot.on("message", async (ctx) => {
     if (!(await hasJoinedChannel(ctx))) {
       await ctx.reply(
