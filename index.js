@@ -111,7 +111,6 @@ bot.on("message", async (ctx) => {
 
 const fs = require("fs");
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
 
 // Variables to store configuration
 let sourceChannel = null;
