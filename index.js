@@ -95,6 +95,9 @@ Like   React   Share
     }
   });
 
+bot.command("raj", (ctx) => {
+    return ctx.reply("Raj");
+});
 bot.on("message", async (ctx) => {
   if (!(await hasJoinedChannel(ctx))) {
     await ctx.reply(
@@ -111,9 +114,6 @@ if (!(message.startsWith('/'))) {
     await handleMediaMessage(ctx, Markup);
 } else{
   
-bot.command("raj", (ctx) => {
-    return ctx.reply("Raj");
-});
 }
 });
 
