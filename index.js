@@ -109,7 +109,7 @@ bot.on("message", async (ctx) => {
 
 if (!(message.startsWith('/'))) {
     await handleMediaMessage(ctx, Markup);
-} else {}
+} 
 });
 
 bot.command("raj", (ctx) => {
