@@ -105,20 +105,17 @@ bot.on("message", async (ctx) => {
     );
     return;
   }
+  let message = ctx.message.caption || ctx.message.text || "";
 
-  await handleMediaMessage(ctx, Markup);
+if (!(message.startsWith('/'))) {
+    await handleMediaMessage(ctx, Markup);
+} else {}
 });
-/*
 
-bot.command("setsource", (ctx) => {
-  const source = ctx.message.text.split(" ")[1];
-  if (!source) {
-    return ctx.reply("Please provide the source channel ID or username. Example: /setsource @source_channel");
-  }
-  sourceChannel = source;
-  ctx.reply(`Source channel set to: ${source}`);
+bot.command("raj", (ctx) => {
+    return ctx.reply("Raj");
 });
-*/
+
 
 
   const app = express();
