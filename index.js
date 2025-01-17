@@ -9,17 +9,14 @@ async function main() {
 
 const axios = require("axios");
 
-async function shortenLink(longUrl) {
-  const apiUrl = "https://shortxlinks.com/api";
+async function shortenLink(longUrl, alias = "") {
   const apiKey = "4f6e8de9640e8c0e08d0d3ba2f22173caa9f74d4";
+  const apiUrl = `https://shortxlinks.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}${alias ? `&alias=${encodeURIComponent(alias)}` : ""}`;
 
   try {
-    const response = await axios.post(apiUrl, {
-      url: longUrl,
-      api: apiKey,
-    });
+    const response = await axios.get(apiUrl);
 
-    if (response.data && response.data.shortenedUrl) {
+    if (response.data && response.data.status === "success" && response.data.shortenedUrl) {
       return response.data.shortenedUrl;
     } else {
       throw new Error("Failed to shorten the link.");
@@ -92,6 +89,7 @@ Like   React   Share
     ctx.reply("Please send a valid Terabox link.");
   }
 }
+
 
 /**  
   // Function to handle media or text messages
