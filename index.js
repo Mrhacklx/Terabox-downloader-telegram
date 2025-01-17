@@ -6,6 +6,94 @@ async function main() {
 
   const bot = new Telegraf(process.env.BOT_TOKEN);
 
+
+const axios = require("axios");
+
+async function shortenLink(longUrl) {
+  const apiUrl = "https://shortxlinks.com/api";
+  const apiKey = "4f6e8de9640e8c0e08d0d3ba2f22173caa9f74d4";
+
+  try {
+    const response = await axios.post(apiUrl, {
+      url: longUrl,
+      api: apiKey,
+    });
+
+    if (response.data && response.data.shortenedUrl) {
+      return response.data.shortenedUrl;
+    } else {
+      throw new Error("Failed to shorten the link.");
+    }
+  } catch (error) {
+    console.error("Error shortening link:", error);
+    throw error;
+  }
+}
+
+async function handleMediaMessage(ctx, Markup) {
+  let messageText = ctx.message.caption || ctx.message.text || "";
+
+  // Regex to extract URLs
+  const linkRegex = /(https?:\/\/[^\s]+)/g;
+  const links = messageText.match(linkRegex);
+
+  if (links && links.some((link) => link.includes("/s/"))) {
+    const extractedLink = links.find((link) => link.includes("tera") && link.includes("/s/"));
+    const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
+    const longUrl = link1.replace("/s/", "https://terabis.blogspot.com/?url=");
+
+    try {
+      const shortenedLink = await shortenLink(longUrl);
+
+      const responseText1 = `
+🔰 𝙁𝙐𝙇𝙇 𝙑𝙄𝘿𝙀𝙊 🎥👇👇 
+${shortenedLink}
+
+BACKUP:
+https://t.me/+JZHc9IszlWE1Mzhl 
+
+♡   ❍   ⌲ 
+
+Like   React   Share
+`;
+
+      if (ctx.message.photo) {
+        // If it's a photo
+        const photo = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+        await ctx.replyWithPhoto(photo, {
+          caption: responseText1,
+          reply_markup: Markup.inlineKeyboard([
+            Markup.button.url("👉 Online Play🎦", shortenedLink),
+            Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
+          ]),
+        });
+      } else if (ctx.message.video) {
+        // If it's a video
+        const video = ctx.message.video.file_id;
+        await ctx.replyWithVideo(video, {
+          caption: responseText1,
+          reply_markup: Markup.inlineKeyboard([
+            Markup.button.url("👉 Online Play🎦", shortenedLink),
+            Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
+          ]),
+        });
+      } else {
+        // If no media, just reply with the link
+        await ctx.reply(responseText1, Markup.inlineKeyboard([
+          Markup.button.url("👉 Online Play🎦", shortenedLink),
+          Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
+        ]));
+      }
+    } catch (error) {
+      console.error("Error processing media message:", error);
+      ctx.reply("Something went wrong. Please try again later.");
+    }
+  } else {
+    ctx.reply("Please send a valid Terabox link.");
+  }
+}
+
+/**  
   // Function to handle media or text messages
 async function handleMediaMessage(ctx, Markup) {
   let messageText = ctx.message.caption || ctx.message.text || "";
@@ -66,7 +154,7 @@ Like   React   Share
   } else {
     ctx.reply("Please send a valid Terabox link.");
   }
-}
+} **/
  async function hasJoinedChannel(ctx) {
     const channelUsername = "@Tera_online_play";
     try {
