@@ -10,8 +10,8 @@ async function main() {
 const axios = require("axios");
 
 async function shortenLink(longUrl, alias = "") {
-  const apiKey = "4f6e8de9640e8c0e08d0d3ba2f22173caa9f74d4";
-  const apiUrl = `https://shortxlinks.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}${alias ? `&alias=${encodeURIComponent(alias)}` : ""}`;
+  const apiKey = "412ceda28781206695fd38f002aee6df6ef623cc";
+  const apiUrl = `https://bisgram.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}${alias ? `&alias=${encodeURIComponent(alias)}` : ""}`;
 
   try {
     const response = await axios.get(apiUrl);
