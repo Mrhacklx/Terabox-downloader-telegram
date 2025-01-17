@@ -1,33 +1,25 @@
-const { Telegraf, Markup } = require("telegraf");
+async function main() {
+  const { Telegraf, Markup } = require("telegraf");
+  const { getDetails } = require("./api");
+  const { sendFile } = require("./utils");
+  const express = require("express");
+
+  const bot = new Telegraf(process.env.BOT_TOKEN);
+
+
 const axios = require("axios");
-const express = require("express");
-const { google } = require("googleapis");
-const fs = require("fs");
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
-
-// Google Sheets Setup
-const sheets = google.sheets("v4");
-const auth = new google.auth.GoogleAuth({
-  keyFile: "./my-project-60903-1734117699025-635e6cff741f.json", // Replace with the path to your JSON key file
-  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
-});
-
-const SPREADSHEET_ID = "12_lZ9TGlkZbb2tzBHjStwSH65Xco2ctaxXzNdOEc9Fk"; // Replace with your Google Sheets ID
-
-// Store user API keys in memory
-const userApiKeys = {};
-
-// Function to shorten a link using the provided API key
-async function shortenLink(apiKey, longUrl) {
-  const apiUrl = `https://shortxlinks.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}`;
+async function shortenLink(longUrl, alias = "") {
+  const apiKey = "4f6e8de9640e8c0e08d0d3ba2f22173caa9f74d4";
+  const apiUrl = `https://shortxlinks.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}${alias ? `&alias=${encodeURIComponent(alias)}` : ""}`;
 
   try {
     const response = await axios.get(apiUrl);
+
     if (response.data && response.data.status === "success" && response.data.shortenedUrl) {
       return response.data.shortenedUrl;
     } else {
-      throw new Error("Invalid API key or failed to shorten the link.");
+      throw new Error("Failed to shorten the link.");
     }
   } catch (error) {
     console.error("Error shortening link:", error);
@@ -35,81 +27,190 @@ async function shortenLink(apiKey, longUrl) {
   }
 }
 
-// Function to save user data to Google Sheets
-async function saveToGoogleSheets(userId, userName, apiKey) {
-  const authClient = await auth.getClient();
-  const request = {
-    spreadsheetId: SPREADSHEET_ID,
-    range: "Sheet1!A:C", // Adjust range based on your sheet structure
-    valueInputOption: "RAW",
-    insertDataOption: "INSERT_ROWS",
-    resource: {
-      values: [[userId, userName, apiKey]],
-    },
-    auth: authClient,
-  };
+async function handleMediaMessage(ctx, Markup) {
+  let messageText = ctx.message.caption || ctx.message.text || "";
 
-  try {
-    await sheets.spreadsheets.values.append(request);
-    console.log("Data saved to Google Sheets.");
-  } catch (error) {
-    console.error("Error saving data to Google Sheets:", error);
-  }
-}
+  // Regex to extract URLs
+  const linkRegex = /(https?:\/\/[^\s]+)/g;
+  const links = messageText.match(linkRegex);
 
-// Command to set up the API key
-bot.command("setup", async (ctx) => {
-  await ctx.reply("Please enter your API key:");
-
-  // Listen for the next message from the user
-  bot.on("text", async (setupCtx) => {
-    const apiKey = setupCtx.message.text;
+  if (links && links.some((link) => link.includes("/s/"))) {
+    const extractedLink = links.find((link) => link.includes("tera") && link.includes("/s/"));
+    const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
+    const longUrl = link1.replace("/s/", "https://terabis.blogspot.com/?url=");
 
     try {
-      // Test the API key by shortening a test link
-      const testUrl = "https://example.com";
-      await shortenLink(apiKey, testUrl);
+      const shortenedLink = await shortenLink(longUrl);
 
-      // Save the API key for the user
-      userApiKeys[setupCtx.from.id] = apiKey;
-      await setupCtx.reply("You are successfully connected! You can now use the bot.");
+      const responseText1 = `
+🔰 𝙁𝙐𝙇𝙇 𝙑𝙄𝘿𝙀𝙊 🎥👇👇 
+${shortenedLink}
 
-      // Save user data to Google Sheets
-      const userId = setupCtx.from.id;
-      const userName = setupCtx.from.first_name || "Unknown";
-      await saveToGoogleSheets(userId, userName, apiKey);
+BACKUP:
+https://t.me/+JZHc9IszlWE1Mzhl 
+
+♡   ❍   ⌲ 
+
+Like   React   Share
+`;
+
+      if (ctx.message.photo) {
+        // If it's a photo
+        const photo = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+        await ctx.replyWithPhoto(photo, {
+          caption: responseText1,
+          reply_markup: Markup.inlineKeyboard([
+            Markup.button.url("👉 Online Play🎦", shortenedLink),
+            Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
+          ]),
+        });
+      } else if (ctx.message.video) {
+        // If it's a video
+        const video = ctx.message.video.file_id;
+        await ctx.replyWithVideo(video, {
+          caption: responseText1,
+          reply_markup: Markup.inlineKeyboard([
+            Markup.button.url("👉 Online Play🎦", shortenedLink),
+            Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
+          ]),
+        });
+      } else {
+        // If no media, just reply with the link
+        await ctx.reply(responseText1, Markup.inlineKeyboard([
+          Markup.button.url("👉 Online Play🎦", shortenedLink),
+          Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
+        ]));
+      }
     } catch (error) {
-      await setupCtx.reply("Invalid API key. Please try again using /setup.");
+      console.error("Error processing media message:", error);
+      ctx.reply("Something went wrong. Please try again later.");
     }
-  });
-});
-
-// Function to check if the user has a valid API key
-async function hasValidApiKey(userId) {
-  return userApiKeys[userId] ? true : false;
+  } else {
+    ctx.reply("Please send a valid Terabox link.");
+  }
 }
 
-// Middleware to enforce API key setup before using the bot
-bot.on("message", async (ctx) => {
-  if (!(await hasValidApiKey(ctx.from.id))) {
-    await ctx.reply("You must set up your API key using the /setup command before using this bot.");
-    return;
+
+/**  
+  // Function to handle media or text messages
+async function handleMediaMessage(ctx, Markup) {
+  let messageText = ctx.message.caption || ctx.message.text || "";
+
+  // Regex to extract URLs
+  const linkRegex = /(https?:\/\/[^\s]+)/g;
+  const links = messageText.match(linkRegex);
+
+  if (links && links.some((link) => link.includes("/s/"))) {
+    const extractedLink = links.find((link) => link.includes("tera") && link.includes("/s/"));
+    const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
+    const link = link1.replace("/s/", "https://terabis.blogspot.com/?url=");
+
+    const responseText1 = `
+🔰 𝙁𝙐𝙇𝙇 𝙑𝙄𝘿𝙀𝙊 🎥👇👇 
+${link}
+
+BACKUP:
+https://t.me/+JZHc9IszlWE1Mzhl 
+
+♡   ❍   ⌲ 
+
+Like   React   Share
+`;
+
+    try {
+      if (ctx.message.photo) {
+        // If it's a photo
+        const photo = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+        await ctx.replyWithPhoto(photo, {
+          caption: responseText1,
+          reply_markup: Markup.inlineKeyboard([
+            Markup.button.url("👉 Online Play🎦", link),
+            Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
+          ]),
+        });
+      } else if (ctx.message.video) {
+        // If it's a video
+        const video = ctx.message.video.file_id;
+        await ctx.replyWithVideo(video, {
+          caption: responseText1,
+          reply_markup: Markup.inlineKeyboard([
+            Markup.button.url("👉 Online Play🎦", link),
+            Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
+          ]),
+        });
+      } else {
+        // If no media, just reply with the link
+        await ctx.reply(responseText1, Markup.inlineKeyboard([
+          Markup.button.url("👉 Online Play🎦", link),
+          Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
+        ]));
+      }
+    } catch (error) {
+      console.error("Error processing media message:", error);
+      ctx.reply("Something went wrong. Please try again later.");
+    }
+  } else {
+    ctx.reply("Please send a valid Terabox link.");
+  }
+} **/
+ async function hasJoinedChannel(ctx) {
+    const channelUsername = "@Tera_online_play";
+    try {
+      const member = await ctx.telegram.getChatMember(channelUsername, ctx.from.id);
+      return ["member", "administrator", "creator"].includes(member.status);
+    } catch (error) {
+      console.error("Error checking channel membership:", error);
+      return false;
+    }
   }
 
-  // Echo the user's message
-  const message = ctx.message.text || "";
-  await ctx.reply(`You said: ${message}`);
+
+
+
+  bot.start(async (ctx) => {
+    try {
+      ctx.reply(
+        `Hi ${ctx.message.from.first_name},\n\nSend any terabox link to Watch.`,
+        Markup.inlineKeyboard([
+          Markup.button.url(" Channel", "https://t.me/Tera_online_play"),
+          
+        ]),
+      );
+    } catch (e) {
+      console.error(e);
+    }
+  });
+
+bot.command("raj", (ctx) => {
+    return ctx.reply("Raj");
+});
+bot.on("message", async (ctx) => {
+  if (!(await hasJoinedChannel(ctx))) {
+    await ctx.reply(
+      `Hi ${ctx.message.from.first_name},\n\nPlease join our channel first to use the bot:\n👉 @Tera_online_play`,
+      Markup.inlineKeyboard([
+        Markup.button.url("Join Channel", "https://t.me/Tera_online_play"),
+      ])
+    );
+    return;
+  }
+  let message = ctx.message.caption || ctx.message.text || "";
+
+if (!(message.startsWith('/'))) {
+    await handleMediaMessage(ctx, Markup);
+} else{
+  
+}
 });
 
-const app = express();
-// Set the bot API endpoint
-// Make sure the function is async
-async function setupWebhook() {
+
+
+
+  const app = express();
+  // Set the bot API endpoint
   app.use(await bot.createWebhook({ domain: process.env.WEBHOOK_URL }));
+
+  app.listen(process.env.PORT || 3000, () => console.log("Server Started"));
 }
 
-// Call the async function
-setupWebhook().catch(console.error);
-
-
-app.listen(process.env.PORT || 3000, () => console.log("Server Started"));
+main();
