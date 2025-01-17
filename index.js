@@ -103,6 +103,13 @@ bot.on("message", async (ctx) => {
 
 const app = express();
 // Set the bot API endpoint
-app.use(await bot.createWebhook({ domain: process.env.WEBHOOK_URL }));
+// Make sure the function is async
+async function setupWebhook() {
+  app.use(await bot.createWebhook({ domain: process.env.WEBHOOK_URL }));
+}
+
+// Call the async function
+setupWebhook().catch(console.error);
+
 
 app.listen(process.env.PORT || 3000, () => console.log("Server Started"));
