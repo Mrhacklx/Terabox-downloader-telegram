@@ -1,38 +1,33 @@
-const fs = require("fs");
-const axios = require("axios");
 const { Telegraf, Markup } = require("telegraf");
+const axios = require("axios");
 const express = require("express");
+const { google } = require("googleapis");
+const fs = require("fs");
 
-const apiKeyFile = "apiKey.json";
+const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// Load API key from file or prompt the user to enter it
-async function getApiKey(ctx) {
-  if (fs.existsSync(apiKeyFile)) {
-    const data = fs.readFileSync(apiKeyFile, "utf-8");
-    const { apiKey } = JSON.parse(data);
-    return apiKey;
-  } else {
-    await ctx.reply("Please enter your API key:");
-    return new Promise((resolve) => {
-      ctx.bot.on("text", (ctx) => {
-        const apiKey = ctx.message.text.trim();
-        fs.writeFileSync(apiKeyFile, JSON.stringify({ apiKey }, null, 2));
-        resolve(apiKey);
-      });
-    });
-  }
-}
+// Google Sheets Setup
+const sheets = google.sheets("v4");
+const auth = new google.auth.GoogleAuth({
+  keyFile: "./my-project-60903-1734117699025-635e6cff741f.json", // Replace with the path to your JSON key file
+  scopes: ["https://www.googleapis.com/auth/spreadsheets"],
+});
 
-async function shortenLink(apiKey, longUrl, alias = "") {
-  const apiUrl = `https://shortxlinks.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}${alias ? `&alias=${encodeURIComponent(alias)}` : ""}`;
+const SPREADSHEET_ID = "12_lZ9TGlkZbb2tzBHjStwSH65Xco2ctaxXzNdOEc9Fk"; // Replace with your Google Sheets ID
+
+// Store user API keys in memory
+const userApiKeys = {};
+
+// Function to shorten a link using the provided API key
+async function shortenLink(apiKey, longUrl) {
+  const apiUrl = `https://shortxlinks.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}`;
 
   try {
     const response = await axios.get(apiUrl);
-
     if (response.data && response.data.status === "success" && response.data.shortenedUrl) {
       return response.data.shortenedUrl;
     } else {
-      throw new Error("Failed to shorten the link.");
+      throw new Error("Invalid API key or failed to shorten the link.");
     }
   } catch (error) {
     console.error("Error shortening link:", error);
@@ -40,117 +35,74 @@ async function shortenLink(apiKey, longUrl, alias = "") {
   }
 }
 
-async function handleMediaMessage(ctx, Markup, apiKey) {
-  let messageText = ctx.message.caption || ctx.message.text || "";
+// Function to save user data to Google Sheets
+async function saveToGoogleSheets(userId, userName, apiKey) {
+  const authClient = await auth.getClient();
+  const request = {
+    spreadsheetId: SPREADSHEET_ID,
+    range: "Sheet1!A:C", // Adjust range based on your sheet structure
+    valueInputOption: "RAW",
+    insertDataOption: "INSERT_ROWS",
+    resource: {
+      values: [[userId, userName, apiKey]],
+    },
+    auth: authClient,
+  };
 
-  // Regex to extract URLs
-  const linkRegex = /(https?:\/\/[^\s]+)/g;
-  const links = messageText.match(linkRegex);
+  try {
+    await sheets.spreadsheets.values.append(request);
+    console.log("Data saved to Google Sheets.");
+  } catch (error) {
+    console.error("Error saving data to Google Sheets:", error);
+  }
+}
 
-  if (links && links.some((link) => link.includes("/s/"))) {
-    const extractedLink = links.find((link) => link.includes("tera") && link.includes("/s/"));
-    const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
-    const longUrl = link1.replace("/s/", "https://terabis.blogspot.com/?url=");
+// Command to set up the API key
+bot.command("setup", async (ctx) => {
+  await ctx.reply("Please enter your API key:");
+
+  // Listen for the next message from the user
+  bot.on("text", async (setupCtx) => {
+    const apiKey = setupCtx.message.text;
 
     try {
-      const shortenedLink = await shortenLink(apiKey, longUrl);
+      // Test the API key by shortening a test link
+      const testUrl = "https://example.com";
+      await shortenLink(apiKey, testUrl);
 
-      const responseText1 = `
-🔰 𝙁𝙐𝙇𝙇 𝙑𝙄𝘿𝙀𝙊 🎥👇👇 
-${shortenedLink}
+      // Save the API key for the user
+      userApiKeys[setupCtx.from.id] = apiKey;
+      await setupCtx.reply("You are successfully connected! You can now use the bot.");
 
-BACKUP:
-https://t.me/+JZHc9IszlWE1Mzhl 
-
-♡   ❍   ⌲ 
-
-Like   React   Share
-`;
-
-      if (ctx.message.photo) {
-        const photo = ctx.message.photo[ctx.message.photo.length - 1].file_id;
-        await ctx.replyWithPhoto(photo, {
-          caption: responseText1,
-          reply_markup: Markup.inlineKeyboard([
-            Markup.button.url("👉 Online Play🎦", shortenedLink),
-            Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
-          ]),
-        });
-      } else if (ctx.message.video) {
-        const video = ctx.message.video.file_id;
-        await ctx.replyWithVideo(video, {
-          caption: responseText1,
-          reply_markup: Markup.inlineKeyboard([
-            Markup.button.url("👉 Online Play🎦", shortenedLink),
-            Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
-          ]),
-        });
-      } else {
-        await ctx.reply(responseText1, Markup.inlineKeyboard([
-          Markup.button.url("👉 Online Play🎦", shortenedLink),
-          Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
-        ]));
-      }
+      // Save user data to Google Sheets
+      const userId = setupCtx.from.id;
+      const userName = setupCtx.from.first_name || "Unknown";
+      await saveToGoogleSheets(userId, userName, apiKey);
     } catch (error) {
-      console.error("Error processing media message:", error);
-      ctx.reply("Something went wrong. Please try again later.");
+      await setupCtx.reply("Invalid API key. Please try again using /setup.");
     }
-  } else {
-    ctx.reply("Please send a valid Terabox link.");
+  });
+});
+
+// Function to check if the user has a valid API key
+async function hasValidApiKey(userId) {
+  return userApiKeys[userId] ? true : false;
+}
+
+// Middleware to enforce API key setup before using the bot
+bot.on("message", async (ctx) => {
+  if (!(await hasValidApiKey(ctx.from.id))) {
+    await ctx.reply("You must set up your API key using the /setup command before using this bot.");
+    return;
   }
-}
 
-async function hasJoinedChannel(ctx) {
-  const channelUsername = "@Tera_online_play";
-  try {
-    const member = await ctx.telegram.getChatMember(channelUsername, ctx.from.id);
-    return ["member", "administrator", "creator"].includes(member.status);
-  } catch (error) {
-    console.error("Error checking channel membership:", error);
-    return false;
-  }
-}
+  // Echo the user's message
+  const message = ctx.message.text || "";
+  await ctx.reply(`You said: ${message}`);
+});
 
-async function main() {
-  const bot = new Telegraf(process.env.BOT_TOKEN);
+const app = express();
+// Set the bot API endpoint
+app.use(await bot.createWebhook({ domain: process.env.WEBHOOK_URL }));
 
-  bot.start(async (ctx) => {
-    const apiKey = await getApiKey(ctx);
-    ctx.reply(
-      `Hi ${ctx.message.from.first_name},\n\nSend any Terabox link to Watch.`,
-      Markup.inlineKeyboard([
-        Markup.button.url(" Channel", "https://t.me/Tera_online_play"),
-      ])
-    );
-  });
-
-  bot.command("raj", (ctx) => {
-    return ctx.reply("Raj");
-  });
-
-  bot.on("message", async (ctx) => {
-    if (!(await hasJoinedChannel(ctx))) {
-      await ctx.reply(
-        `Hi ${ctx.message.from.first_name},\n\nPlease join our channel first to use the bot:\n👉 @Tera_online_play`,
-        Markup.inlineKeyboard([
-          Markup.button.url("Join Channel", "https://t.me/Tera_online_play"),
-        ])
-      );
-      return;
-    }
-
-    const apiKey = JSON.parse(fs.readFileSync(apiKeyFile, "utf-8")).apiKey;
-    let message = ctx.message.caption || ctx.message.text || "";
-
-    if (!message.startsWith("/")) {
-      await handleMediaMessage(ctx, Markup, apiKey);
-    }
-  });
-
-  const app = express();
-  app.use(await bot.createWebhook({ domain: process.env.WEBHOOK_URL }));
-
-  app.listen(process.env.PORT || 3000, () => console.log("Server Started"));
-}
-
-main();
+app.listen(process.env.PORT || 3000, () => console.log("Server Started"));
