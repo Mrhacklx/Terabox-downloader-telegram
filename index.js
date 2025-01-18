@@ -1,150 +1,147 @@
 const { Telegraf, Markup } = require("telegraf");
-const fs = require("fs");
 const axios = require("axios");
+const express = require("express");
+const fs = require("fs");
 
-const bot = new Telegraf(process.env.BOT_TOKEN);
+// File to store user data (API keys)
+const userDataFile = "user_data.json";
+
+// Load user data from file
 let userData = {};
-
-// Load user data from a file
-if (fs.existsSync("userData.json")) {
-  userData = JSON.parse(fs.readFileSync("userData.json"));
+if (fs.existsSync(userDataFile)) {
+  userData = JSON.parse(fs.readFileSync(userDataFile));
 }
 
-// Save user data to a file
+// Save user data to file
 function saveUserData() {
-  fs.writeFileSync("userData.json", JSON.stringify(userData, null, 2));
+  fs.writeFileSync(userDataFile, JSON.stringify(userData));
 }
 
-// Validate the API key
-async function validateApiKey(apiKey) {
-  try {
-    const testUrl = "https://example.com"; // Use any valid test URL
-    const apiUrl = `https://bisgram.com/api?api=${apiKey}&url=${encodeURIComponent(testUrl)}`;
-    const response = await axios.get(apiUrl);
-    return response.data && response.data.status === "success";
-  } catch (error) {
-    return false;
-  }
-}
+async function main() {
+  const bot = new Telegraf(process.env.BOT_TOKEN);
 
-// Shorten the link
-async function shortenLink(apiKey, longUrl, alias = "") {
-  try {
-    const apiUrl = `https://bisgram.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}${alias ? `&alias=${encodeURIComponent(alias)}` : ""}`;
-    const response = await axios.get(apiUrl);
-
-    if (response.data && response.data.status === "success") {
-      return response.data.shortenedUrl;
-    } else {
-      throw new Error("Failed to shorten the link.");
-    }
-  } catch (error) {
-    console.error("Error shortening link:", error);
-    throw error;
-  }
-}
-
-// Connect API key command
-bot.command("connect", async (ctx) => {
-  const userId = ctx.from.id;
-  const messageParts = ctx.message.text.split(" ");
-
-  if (messageParts.length < 2) {
-    return ctx.reply("Please provide your API key. Example: /connect [API_KEY]");
-  }
-
-  const apiKey = messageParts[1];
-  const isValid = await validateApiKey(apiKey);
-
-  if (isValid) {
-    userData[userId] = { apiKey, linkCount: 0 };
-    saveUserData();
-    ctx.reply("✅ API key connected successfully! You can now use the bot.");
-  } else {
-    ctx.reply("❌ Invalid API key. Please check and try again.");
-  }
-});
-
-// Disconnect API key command
-bot.command("disconnect", (ctx) => {
-  const userId = ctx.from.id;
-
-  if (userData[userId]) {
-    delete userData[userId];
-    saveUserData();
-    ctx.reply("✅ API key disconnected successfully.");
-  } else {
-    ctx.reply("⚠️ No API key is connected.");
-  }
-});
-
-// View connected API key
-bot.command("view", (ctx) => {
-  const userId = ctx.from.id;
-
-  if (userData[userId]?.apiKey) {
-    ctx.reply(`✅ Your connected API key is: \`${userData[userId].apiKey}\``, { parse_mode: "Markdown" });
-  } else {
-    ctx.reply("⚠️ No API key is connected. Use /connect to link one.");
-  }
-});
-
-// View user stats
-bot.command("stats", (ctx) => {
-  const userId = ctx.from.id;
-  const count = userData[userId]?.linkCount || 0;
-
-  ctx.reply(`📊 You have shortened ${count} links.`);
-});
-
-// Help command
-bot.command("help", (ctx) => {
-  ctx.reply(`
-🤖 *Link Shortener Bot Commands:*
-- /connect [API_KEY] - Connect your API key.
-- /disconnect - Disconnect your API key.
-- /view - View your connected API key.
-- /stats - View your link shortening stats.
-- /help - Show this help message.
-`, { parse_mode: "Markdown" });
-});
-
-// Handle shortening links
-bot.on("message", async (ctx) => {
-  const userId = ctx.from.id;
-  const message = ctx.message.text || "";
-
-  if (!userData[userId]?.apiKey) {
-    return ctx.reply("⚠️ You haven't connected your API key. Use /connect [API_KEY].");
-  }
-
-  if (message.startsWith("http://") || message.startsWith("https://")) {
+  // Function to validate API Key
+  async function validateApiKey(apiKey) {
     try {
-      const apiKey = userData[userId].apiKey;
-      const shortenedLink = await shortenLink(apiKey, message);
+      const testUrl = "https://example.com"; // Replace with a valid URL for testing
+      const apiUrl = `https://bisgram.com/api?api=${apiKey}&url=${encodeURIComponent(testUrl)}`;
+      const response = await axios.get(apiUrl);
 
-      // Increment link count
-      userData[userId].linkCount = (userData[userId].linkCount || 0) + 1;
-      saveUserData();
-
-      ctx.reply(`✅ Shortened Link: ${shortenedLink}`);
+      return response.data && response.data.status === "success";
     } catch (error) {
-      ctx.reply("❌ Failed to shorten the link. Please try again later.");
+      console.error("Error validating API key:", error);
+      return false;
     }
-  } else {
-    ctx.reply("⚠️ Please send a valid URL to shorten.");
   }
-});
 
-// Start command
-bot.start((ctx) => {
-  ctx.reply(`
-Hi ${ctx.message.from.first_name}, welcome to the Link Shortener Bot! 🤖
-Use /help to see all available commands.
-  `);
-});
+  // Handle /start command
+  bot.start(async (ctx) => {
+    ctx.reply(
+      `Hi ${ctx.message.from.first_name},\n\nWelcome to the Link Shortener Bot! Please connect your API key first using /connect [API_KEY].`
+    );
+  });
 
-// Start the bot
-bot.launch();
+  // Handle /connect command
+  bot.command("connect", async (ctx) => {
+    const messageParts = ctx.message.text.split(" ");
+    if (messageParts.length < 2) {
+      return ctx.reply("Please provide your API key. Example: /connect YOUR_API_KEY");
+    }
 
-console.log("Bot is running...");
+    const apiKey = messageParts[1];
+    const userId = ctx.from.id;
+
+    if (await validateApiKey(apiKey)) {
+      userData[userId] = { apiKey };
+      saveUserData();
+      ctx.reply("✅ API key connected successfully! You can now shorten links.");
+    } else {
+      ctx.reply("❌ Invalid API key. Please try again.");
+    }
+  });
+
+  // Handle /disconnect command
+  bot.command("disconnect", (ctx) => {
+    const userId = ctx.from.id;
+
+    if (userData[userId]) {
+      delete userData[userId];
+      saveUserData();
+      ctx.reply("✅ Your API key has been disconnected successfully.");
+    } else {
+      ctx.reply("⚠️ You have not connected an API key yet.");
+    }
+  });
+
+  // Handle /view command to show connected API key
+  bot.command("view", (ctx) => {
+    const userId = ctx.from.id;
+    if (userData[userId]?.apiKey) {
+      ctx.reply(`✅ Your connected API key: \`${userData[userId].apiKey}\``, { parse_mode: "Markdown" });
+    } else {
+      ctx.reply("⚠️ No API key is connected. Use /connect to link one.");
+    }
+  });
+
+  // Handle /stats command to show user's link shortening stats
+  bot.command("stats", (ctx) => {
+    const userId = ctx.from.id;
+    const linkCount = userData[userId]?.linkCount || 0;
+    ctx.reply(`📊 You have shortened ${linkCount} links.`);
+  });
+
+  // Handle messages (link processing)
+  bot.on("message", async (ctx) => {
+    const userId = ctx.from.id;
+
+    // Check if the user has connected their API key
+    if (!userData[userId] || !userData[userId].apiKey) {
+      return ctx.reply(
+        "⚠️ You haven't connected your API key yet. Please use /connect [API_KEY] to connect."
+      );
+    }
+
+    const apiKey = userData[userId].apiKey;
+    const messageText = ctx.message.text || "";
+
+    // Regex to extract URLs
+    const linkRegex = /(https?:\/\/[^\s]+)/g;
+    const links = messageText.match(linkRegex);
+
+    if (!links) {
+      return ctx.reply("Please send a valid link to shorten.");
+    }
+
+    const longUrl = links[0];
+
+    try {
+      // Shorten the link using the user's API key
+      const apiUrl = `https://bisgram.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}`;
+      const response = await axios.get(apiUrl);
+
+      if (response.data && response.data.status === "success") {
+        const shortenedLink = response.data.shortenedUrl;
+
+        // Increment user's link count
+        if (!userData[userId].linkCount) {
+          userData[userId].linkCount = 0;
+        }
+        userData[userId].linkCount++;
+        saveUserData();
+
+        ctx.reply(`🔗 Shortened Link: ${shortenedLink}`);
+      } else {
+        throw new Error("Failed to shorten the link.");
+      }
+    } catch (error) {
+      console.error("Error shortening link:", error);
+      ctx.reply("❌ An error occurred while processing your link. Please try again.");
+    }
+  });
+
+  const app = express();
+  app.use(await bot.createWebhook({ domain: process.env.WEBHOOK_URL }));
+  app.listen(process.env.PORT || 3000, () => console.log("Server Started"));
+}
+
+main();
