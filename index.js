@@ -72,6 +72,17 @@ async function main() {
       ctx.reply("⚠️ You have not connected an API key yet.");
     }
   });
+  
+  bot.command("commands", (ctx) => {
+  ctx.reply(`
+🤖 *Link Shortener Bot Commands:*
+- /connect [API_KEY] - Connect your API key.
+- /disconnect - Disconnect your API key.
+- /view - View your connected API key.
+- /stats - View your link shortening stats.
+- /help - How to connect?
+`, { parse_mode: "Markdown" });
+});
 
   // Handle /view command to show connected API key
   bot.command("view", (ctx) => {
