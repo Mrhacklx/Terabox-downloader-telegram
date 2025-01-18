@@ -37,7 +37,7 @@ async function main() {
   // Handle /start command
   bot.start(async (ctx) => {
     ctx.reply(
-      `Hi ${ctx.message.from.first_name},\n\nWelcome to the Terabis \n\nHow to Use this Bot /commands`
+      `Hi ${ctx.message.from.first_name},\n\nWelcome to the Terabis \n\nHow to connect /help`
     );
   });
 
@@ -93,22 +93,15 @@ For any confusion or help, contact [@ayushx2026\\_bot](https://t.me/ayushx2026_b
 
 
 
-bot.command("help", (ctx) => {
-  ctx.reply(
-    `
-How to Connect:
-1. Go to [Bisgram.com](https://bisgram.com)
-2. Create an Account
-3. Click on the menu bar (top left side)
-4. Click on *Tools > Developer API*
-5. Copy the API token
-6. Use this command: /connect YOUR_API_KEY
-   Example: /connect 8268d7f25na2c690bk25d4k20fbc63p5p09d6906
-
-For any confusion or help, contact [@ayushx2026_bot](https://t.me/ayushx2026_bot)
-    `,
-    { parse_mode: "MarkdownV2" }
-  );
+bot.command("commands", (ctx) => {
+  ctx.reply(`
+🤖 *Link Shortener Bot Commands:*
+- /connect [API_KEY] - Connect your API key.
+- /disconnect - Disconnect your API key.
+- /view - View your connected API key.
+- /stats - View your link shortening stats.
+- /help - How to connect to website.
+`, { parse_mode: "Markdown" });
 });
 
 
