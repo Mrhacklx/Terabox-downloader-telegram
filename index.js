@@ -36,11 +36,21 @@ async function main() {
 
   // Handle /start command
   bot.start(async (ctx) => {
-    ctx.reply(
-      `Hi ${ctx.message.from.first_name},\n\nWelcome to the Link Shortener Bot! Please connect your API key first using /connect [API_KEY].`
+     const userId = ctx.from.id;
+
+    // Check if the user has connected their API key
+    if (!userData[userId] || !userData[userId].apiKey) {
+      return ctx.reply(
+      `Hi ${ctx.message.from.first_name},\n\nWelcome to the Link Shortener Bot! \nPlease connect your API key first using \n/connect [API_KEY].\n\n How to Connect /help`
     );
+    }
+  ctx.reply(`Hi ${ctx.message.from.first_name},\n\nconnected successfully! \nYou can now shorten links`);  
   });
 
+bot.command("help", async (ctx) => {
+ctx.reply("How to Connect\n\n 1. Go to Bisgram.com \n2. Create Account \n3. Click on menu Bae (Top left side) \n4. click on Tools > Developer API \n4. Copy API token \n 5. Use this Command /connect YOUR_API_KEY \n Ex: /connect 8268d7f25na2c690bk25d4k20fbc63p5p09d6906 \n\n For any confusion / help @ayushx2026_bot");
+}
+  
   // Handle /connect command
   bot.command("connect", async (ctx) => {
     const messageParts = ctx.message.text.split(" ");
