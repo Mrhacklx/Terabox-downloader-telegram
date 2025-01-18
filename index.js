@@ -85,18 +85,24 @@ async function main() {
 });
 
 
- bot.command("help", (ctx) => {
-  ctx.reply(`
-  How to Connect
-  1. Go to Bisgram.com 
-  2. Create Account 
-  3. Click on menu Bae (Top left side) 
-  4. click on Tools > Developer API 
-  4. Copy API token 
-  5. Use this Command /connect YOUR_API_KEY 
-  Ex: /connect 8268d7f25na2c690bk25d4k20fbc63p5p09d6906 
-  For any confusion or help @ayushx2026_bot`, { parse_mode: "Markdown" });
+bot.command("help", (ctx) => {
+  ctx.reply(
+    `
+How to Connect:
+1. Go to [Bisgram.com](https://bisgram.com)
+2. Create an Account
+3. Click on the menu bar (top left side)
+4. Click on *Tools > Developer API*
+5. Copy the API token
+6. Use this command: /connect YOUR_API_KEY
+   Example: /connect 8268d7f25na2c690bk25d4k20fbc63p5p09d6906
+
+For any confusion or help, contact [@ayushx2026_bot](https://t.me/ayushx2026_bot)
+    `,
+    { parse_mode: "MarkdownV2" }
+  );
 });
+
 
   // Handle /view command to show connected API key
   bot.command("view", (ctx) => {
