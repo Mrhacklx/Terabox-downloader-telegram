@@ -122,6 +122,26 @@ bot.command("commands", (ctx) => {
     ctx.reply(`📊 You have shortened ${linkCount} links.`);
   });
 
+async function handleMediaMessage(ctx, Markup) {
+  let messageText = ctx.message.caption || ctx.message.text || "";
+
+  // Regex to extract URLs
+  const linkRegex = /(https?:\/\/[^\s]+)/g;
+  const links = messageText.match(linkRegex);
+
+  if (links && links.some((link) => link.includes("/s/"))) {
+    const extractedLink = links.find((link) => link.includes("tera") && link.includes("/s/"));
+    const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
+    const longUrl = link1.replace("/s/", "https://terabis.blogspot.com/?url=");
+
+  }else {
+    ctx.reply("Please send a valid Terabox link.");
+  }
+}
+
+
+
+
  bot.on("message", async (ctx) => {
   const userId = ctx.from.id;
 
@@ -139,15 +159,18 @@ bot.command("commands", (ctx) => {
   const linkRegex = /(https?:\/\/[^\s]+)/g;
   const links = messageText.match(linkRegex);
 
-  if (!links) {
+  if (!links){ 
     if (ctx.message.photo || ctx.message.video || ctx.message.document) {
       return ctx.reply("Please provide a link in the caption to shorten.");
     }
     return ctx.reply("Please send a valid link to shorten.");
   }
 
-  const longUrl = links[0];
-
+  if (links && links.some((link) => link.includes("/s/"))) {
+    const extractedLink = links.find((link) => link.includes("tera") && link.includes("/s/"));
+    const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
+    const longUrl = link1.replace("/s/", "https://terabis.blogspot.com/?url=");
+    
   try {
     // Shorten the link using the user's API key
     const apiUrl = `https://bisgram.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}`;
@@ -192,6 +215,9 @@ Like React Share`
   } catch (error) {
     console.error("Error shortening link:", error);
     ctx.reply("❌ An error occurred while processing your link. Please try again.");
+  }
+    }else {
+    ctx.reply("Please send  valid Terabox link.");
   }
 });
 
