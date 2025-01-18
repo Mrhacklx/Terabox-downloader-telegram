@@ -90,54 +90,71 @@ async function main() {
     ctx.reply(`📊 You have shortened ${linkCount} links.`);
   });
 
-  // Handle messages (link processing)
-  bot.on("message", async (ctx) => {
-    const userId = ctx.from.id;
+ bot.on("message", async (ctx) => {
+  const userId = ctx.from.id;
 
-    // Check if the user has connected their API key
-    if (!userData[userId] || !userData[userId].apiKey) {
-      return ctx.reply(
-        "⚠️ You haven't connected your API key yet. Please use /connect [API_KEY] to connect."
-      );
+  // Check if the user has connected their API key
+  if (!userData[userId] || !userData[userId].apiKey) {
+    return ctx.reply(
+      "⚠️ You haven't connected your API key yet. Please use /connect [API_KEY] to connect."
+    );
+  }
+
+  const apiKey = userData[userId].apiKey;
+  let messageText = ctx.message.caption || ctx.message.text || "";
+
+  // Regex to extract URLs
+  const linkRegex = /(https?:\/\/[^\s]+)/g;
+  const links = messageText.match(linkRegex);
+
+  if (!links) {
+    if (ctx.message.photo || ctx.message.video || ctx.message.document) {
+      return ctx.reply("Please provide a link in the caption to shorten.");
     }
+    return ctx.reply("Please send a valid link to shorten.");
+  }
 
-    const apiKey = userData[userId].apiKey;
-    const messageText = ctx.message.text || "";
+  const longUrl = links[0];
 
-    // Regex to extract URLs
-    const linkRegex = /(https?:\/\/[^\s]+)/g;
-    const links = messageText.match(linkRegex);
+  try {
+    // Shorten the link using the user's API key
+    const apiUrl = `https://bisgram.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}`;
+    const response = await axios.get(apiUrl);
 
-    if (!links) {
-      return ctx.reply("Please send a valid link to shorten.");
-    }
+    if (response.data && response.data.status === "success") {
+      const shortenedLink = response.data.shortenedUrl;
 
-    const longUrl = links[0];
-
-    try {
-      // Shorten the link using the user's API key
-      const apiUrl = `https://bisgram.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}`;
-      const response = await axios.get(apiUrl);
-
-      if (response.data && response.data.status === "success") {
-        const shortenedLink = response.data.shortenedUrl;
-
-        // Increment user's link count
-        if (!userData[userId].linkCount) {
-          userData[userId].linkCount = 0;
-        }
-        userData[userId].linkCount++;
-        saveUserData();
-
-        ctx.reply(`🔗 Shortened Link: ${shortenedLink}`);
+      if (ctx.message.photo) {
+        // Handle photo message
+        const photo = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+        await ctx.replyWithPhoto(photo, {
+          caption: `🔗 Shortened Link: ${shortenedLink}`,
+        });
+      } else if (ctx.message.video) {
+        // Handle video message
+        const video = ctx.message.video.file_id;
+        await ctx.replyWithVideo(video, {
+          caption: `🔗 Shortened Link: ${shortenedLink}`,
+        });
+      } else if (ctx.message.document) {
+        // Handle document message
+        const document = ctx.message.document.file_id;
+        await ctx.replyWithDocument(document, {
+          caption: `🔗 Shortened Link: ${shortenedLink}`,
+        });
       } else {
-        throw new Error("Failed to shorten the link.");
+        // If no media, just reply with the link
+        await ctx.reply(`🔗 Shortened Link: ${shortenedLink}`);
       }
-    } catch (error) {
-      console.error("Error shortening link:", error);
-      ctx.reply("❌ An error occurred while processing your link. Please try again.");
+    } else {
+      throw new Error("Failed to shorten the link.");
     }
-  });
+  } catch (error) {
+    console.error("Error shortening link:", error);
+    ctx.reply("❌ An error occurred while processing your link. Please try again.");
+  }
+});
+
 
   const app = express();
   app.use(await bot.createWebhook({ domain: process.env.WEBHOOK_URL }));
