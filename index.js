@@ -37,7 +37,7 @@ async function main() {
   // Handle /start command
   bot.start(async (ctx) => {
     ctx.reply(
-      `Hi ${ctx.message.from.first_name},\n\nWelcome to the Link Shortener Bot! Please connect your API key first using /connect [API_KEY].`
+      `Hi ${ctx.message.from.first_name},\n\nWelcome to the Terabis \n\nHow to Use this Bot \ncommands`
     );
   });
 
@@ -45,7 +45,7 @@ async function main() {
   bot.command("connect", async (ctx) => {
     const messageParts = ctx.message.text.split(" ");
     if (messageParts.length < 2) {
-      return ctx.reply("Please provide your API key. Example: /connect YOUR_API_KEY");
+      return ctx.reply("Please provide your API key. Example: /connect YOUR_API_KEY \n\nFor API ID /help");
     }
 
     const apiKey = messageParts[1];
@@ -56,7 +56,7 @@ async function main() {
       saveUserData();
       ctx.reply("✅ API key connected successfully! You can now shorten links.");
     } else {
-      ctx.reply("❌ Invalid API key. Please try again.");
+      ctx.reply("❌ Invalid API key. Please try again.\n\nHow to connect /help");
     }
   });
 
@@ -135,7 +135,9 @@ async function main() {
     if (response.data && response.data.status === "success") {
       const shortenedLink = response.data.shortenedUrl;
       const resText = 
-`🔰 𝙁𝙐𝙇𝙇 𝙑𝙄𝘿𝙀𝙊 🎥👇👇 
+`🔰 𝙁𝙐𝙇𝙇 𝙑𝙄𝘿𝙀𝙊 🎥
+
+Link 👇👇
 ${shortenedLink}
 
 ♡     ❍     ⌲ 
