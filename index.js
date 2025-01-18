@@ -134,28 +134,34 @@ async function main() {
 
     if (response.data && response.data.status === "success") {
       const shortenedLink = response.data.shortenedUrl;
+      const resText = 
+`🔰 𝙁𝙐𝙇𝙇 𝙑𝙄𝘿𝙀𝙊 🎥👇👇 
+${shortenedLink}
 
+♡     ❍     ⌲ 
+Like React Share`
+;
       if (ctx.message.photo) {
         // Handle photo message
         const photo = ctx.message.photo[ctx.message.photo.length - 1].file_id;
         await ctx.replyWithPhoto(photo, {
-          caption: `🔗 Shortened Link: ${shortenedLink}`,
+          caption: resText,
         });
       } else if (ctx.message.video) {
         // Handle video message
         const video = ctx.message.video.file_id;
         await ctx.replyWithVideo(video, {
-          caption: `🔗 Shortened Link: ${shortenedLink}`,
+          caption: resText,
         });
       } else if (ctx.message.document) {
         // Handle document message
         const document = ctx.message.document.file_id;
         await ctx.replyWithDocument(document, {
-          caption: `🔗 Shortened Link: ${shortenedLink}`,
+          caption: resText,
         });
       } else {
         // If no media, just reply with the link
-        await ctx.reply(`🔗 Shortened Link: ${shortenedLink}`);
+        await ctx.reply(`${resText}`);
       }
     } else {
       throw new Error("Failed to shorten the link.");
