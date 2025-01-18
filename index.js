@@ -1,215 +1,108 @@
-async function main() {
-  const { Telegraf, Markup } = require("telegraf");
-  const { getDetails } = require("./api");
-  const { sendFile } = require("./utils");
-  const express = require("express");
+const { Telegraf, Markup } = require("telegraf");
+const axios = require("axios");
+const express = require("express");
+const fs = require("fs");
 
+// File to store user data (API keys)
+const userDataFile = "user_data.json";
+
+// Load user data from file
+let userData = {};
+if (fs.existsSync(userDataFile)) {
+  userData = JSON.parse(fs.readFileSync(userDataFile));
+}
+
+// Save user data to file
+function saveUserData() {
+  fs.writeFileSync(userDataFile, JSON.stringify(userData));
+}
+
+async function main() {
   const bot = new Telegraf(process.env.BOT_TOKEN);
 
-
-const axios = require("axios");
-
-async function shortenLink(longUrl, alias = "") {
-  const apiKey = "412ceda28781206695fd38f002aee6df6ef623cc";
-  const apiUrl = `https://bisgram.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}${alias ? `&alias=${encodeURIComponent(alias)}` : ""}`;
-
-  try {
-    const response = await axios.get(apiUrl);
-
-    if (response.data && response.data.status === "success" && response.data.shortenedUrl) {
-      return response.data.shortenedUrl;
-    } else {
-      throw new Error("Failed to shorten the link.");
-    }
-  } catch (error) {
-    console.error("Error shortening link:", error);
-    throw error;
-  }
-}
-
-async function handleMediaMessage(ctx, Markup) {
-  let messageText = ctx.message.caption || ctx.message.text || "";
-
-  // Regex to extract URLs
-  const linkRegex = /(https?:\/\/[^\s]+)/g;
-  const links = messageText.match(linkRegex);
-
-  if (links && links.some((link) => link.includes("/s/"))) {
-    const extractedLink = links.find((link) => link.includes("tera") && link.includes("/s/"));
-    const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
-    const longUrl = link1.replace("/s/", "https://terabis.blogspot.com/?url=");
-
+  // Function to validate API Key
+  async function validateApiKey(apiKey) {
     try {
-      const shortenedLink = await shortenLink(longUrl);
+      const testUrl = "https://example.com"; // Replace with a valid URL for testing
+      const apiUrl = `https://bisgram.com/api?api=${apiKey}&url=${encodeURIComponent(testUrl)}`;
+      const response = await axios.get(apiUrl);
 
-      const responseText1 = `
-🔰 𝙁𝙐𝙇𝙇 𝙑𝙄𝘿𝙀𝙊 🎥👇👇 
-${shortenedLink}
-
-BACKUP:
-https://t.me/+JZHc9IszlWE1Mzhl 
-
-♡   ❍   ⌲ 
-
-Like   React   Share
-`;
-
-      if (ctx.message.photo) {
-        // If it's a photo
-        const photo = ctx.message.photo[ctx.message.photo.length - 1].file_id;
-        await ctx.replyWithPhoto(photo, {
-          caption: responseText1,
-          reply_markup: Markup.inlineKeyboard([
-            Markup.button.url("👉 Online Play🎦", shortenedLink),
-            Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
-          ]),
-        });
-      } else if (ctx.message.video) {
-        // If it's a video
-        const video = ctx.message.video.file_id;
-        await ctx.replyWithVideo(video, {
-          caption: responseText1,
-          reply_markup: Markup.inlineKeyboard([
-            Markup.button.url("👉 Online Play🎦", shortenedLink),
-            Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
-          ]),
-        });
-      } else {
-        // If no media, just reply with the link
-        await ctx.reply(responseText1, Markup.inlineKeyboard([
-          Markup.button.url("👉 Online Play🎦", shortenedLink),
-          Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
-        ]));
-      }
+      return response.data && response.data.status === "success";
     } catch (error) {
-      console.error("Error processing media message:", error);
-      ctx.reply("Something went wrong. Please try again later.");
-    }
-  } else {
-    ctx.reply("Please send a valid Terabox link.");
-  }
-}
-
-
-/**  
-  // Function to handle media or text messages
-async function handleMediaMessage(ctx, Markup) {
-  let messageText = ctx.message.caption || ctx.message.text || "";
-
-  // Regex to extract URLs
-  const linkRegex = /(https?:\/\/[^\s]+)/g;
-  const links = messageText.match(linkRegex);
-
-  if (links && links.some((link) => link.includes("/s/"))) {
-    const extractedLink = links.find((link) => link.includes("tera") && link.includes("/s/"));
-    const link1 = extractedLink.replace(/^.*\/s\//, "/s/");
-    const link = link1.replace("/s/", "https://terabis.blogspot.com/?url=");
-
-    const responseText1 = `
-🔰 𝙁𝙐𝙇𝙇 𝙑𝙄𝘿𝙀𝙊 🎥👇👇 
-${link}
-
-BACKUP:
-https://t.me/+JZHc9IszlWE1Mzhl 
-
-♡   ❍   ⌲ 
-
-Like   React   Share
-`;
-
-    try {
-      if (ctx.message.photo) {
-        // If it's a photo
-        const photo = ctx.message.photo[ctx.message.photo.length - 1].file_id;
-        await ctx.replyWithPhoto(photo, {
-          caption: responseText1,
-          reply_markup: Markup.inlineKeyboard([
-            Markup.button.url("👉 Online Play🎦", link),
-            Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
-          ]),
-        });
-      } else if (ctx.message.video) {
-        // If it's a video
-        const video = ctx.message.video.file_id;
-        await ctx.replyWithVideo(video, {
-          caption: responseText1,
-          reply_markup: Markup.inlineKeyboard([
-            Markup.button.url("👉 Online Play🎦", link),
-            Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
-          ]),
-        });
-      } else {
-        // If no media, just reply with the link
-        await ctx.reply(responseText1, Markup.inlineKeyboard([
-          Markup.button.url("👉 Online Play🎦", link),
-          Markup.button.url("or Manual Play", "https://terabis.blogspot.com/"),
-        ]));
-      }
-    } catch (error) {
-      console.error("Error processing media message:", error);
-      ctx.reply("Something went wrong. Please try again later.");
-    }
-  } else {
-    ctx.reply("Please send a valid Terabox link.");
-  }
-} **/
- async function hasJoinedChannel(ctx) {
-    const channelUsername = "@Tera_online_play";
-    try {
-      const member = await ctx.telegram.getChatMember(channelUsername, ctx.from.id);
-      return ["member", "administrator", "creator"].includes(member.status);
-    } catch (error) {
-      console.error("Error checking channel membership:", error);
+      console.error("Error validating API key:", error);
       return false;
     }
   }
 
-
-
-
+  // Handle /start command
   bot.start(async (ctx) => {
-    try {
-      ctx.reply(
-        `Hi ${ctx.message.from.first_name},\n\nSend any terabox link to Watch.`,
-        Markup.inlineKeyboard([
-          Markup.button.url(" Channel", "https://t.me/Tera_online_play"),
-          
-        ]),
-      );
-    } catch (e) {
-      console.error(e);
+    ctx.reply(
+      `Hi ${ctx.message.from.first_name},\n\nWelcome to the Link Shortener Bot! Please connect your API key first using /connect [API_KEY].`
+    );
+  });
+
+  // Handle /connect command
+  bot.command("connect", async (ctx) => {
+    const messageParts = ctx.message.text.split(" ");
+    if (messageParts.length < 2) {
+      return ctx.reply("Please provide your API key. Example: /connect YOUR_API_KEY");
+    }
+
+    const apiKey = messageParts[1];
+    const userId = ctx.from.id;
+
+    if (await validateApiKey(apiKey)) {
+      userData[userId] = { apiKey };
+      saveUserData();
+      ctx.reply("✅ API key connected successfully! You can now shorten links.");
+    } else {
+      ctx.reply("❌ Invalid API key. Please try again.");
     }
   });
 
-bot.command("raj", (ctx) => {
-    return ctx.reply("Raj");
-});
-bot.on("message", async (ctx) => {
-  if (!(await hasJoinedChannel(ctx))) {
-    await ctx.reply(
-      `Hi ${ctx.message.from.first_name},\n\nPlease join our channel first to use the bot:\n👉 @Tera_online_play`,
-      Markup.inlineKeyboard([
-        Markup.button.url("Join Channel", "https://t.me/Tera_online_play"),
-      ])
-    );
-    return;
-  }
-  let message = ctx.message.caption || ctx.message.text || "";
+  // Handle messages (link processing)
+  bot.on("message", async (ctx) => {
+    const userId = ctx.from.id;
 
-if (!(message.startsWith('/'))) {
-    await handleMediaMessage(ctx, Markup);
-} else{
-  
-}
-});
+    // Check if the user has connected their API key
+    if (!userData[userId] || !userData[userId].apiKey) {
+      return ctx.reply(
+        "⚠️ You haven't connected your API key yet. Please use /connect [API_KEY] to connect."
+      );
+    }
 
+    const apiKey = userData[userId].apiKey;
+    const messageText = ctx.message.text || "";
 
+    // Regex to extract URLs
+    const linkRegex = /(https?:\/\/[^\s]+)/g;
+    const links = messageText.match(linkRegex);
 
+    if (!links) {
+      return ctx.reply("Please send a valid link to shorten.");
+    }
+
+    const longUrl = links[0];
+
+    try {
+      // Shorten the link using the user's API key
+      const apiUrl = `https://bisgram.com/api?api=${apiKey}&url=${encodeURIComponent(longUrl)}`;
+      const response = await axios.get(apiUrl);
+
+      if (response.data && response.data.status === "success") {
+        const shortenedLink = response.data.shortenedUrl;
+        ctx.reply(`🔗 Shortened Link: ${shortenedLink}`);
+      } else {
+        throw new Error("Failed to shorten the link.");
+      }
+    } catch (error) {
+      console.error("Error shortening link:", error);
+      ctx.reply("❌ An error occurred while processing your link. Please try again.");
+    }
+  });
 
   const app = express();
-  // Set the bot API endpoint
   app.use(await bot.createWebhook({ domain: process.env.WEBHOOK_URL }));
-
   app.listen(process.env.PORT || 3000, () => console.log("Server Started"));
 }
 
