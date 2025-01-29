@@ -99,7 +99,6 @@ bot.command("commands", (ctx) => {
 - /connect [API_KEY] - Connect your API key.
 - /disconnect - Disconnect your API key.
 - /view - View your connected API key.
-- /stats - View your link shortening stats.
 - /help - How to connect to website.
 `, { parse_mode: "Markdown" });
 });
@@ -115,12 +114,6 @@ bot.command("commands", (ctx) => {
     }
   });
 
-  // Handle /stats command to show user's link shortening stats
-  bot.command("stats", (ctx) => {
-    const userId = ctx.from.id;
-    const linkCount = userData[userId]?.linkCount || 0;
-    ctx.reply(`📊 You have shortened ${linkCount} links.`);
-  });
 
 async function handleMediaMessage(ctx, Markup) {
   let messageText = ctx.message.caption || ctx.message.text || "";
