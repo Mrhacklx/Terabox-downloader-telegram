@@ -94,7 +94,7 @@ https://t.me/terabis/9`
   ctx.reply(
     `
 How to Connect:
-1. Go to [Bisgram.com](https://bisgram.com)
+1. Go to Bisgram.com
 2. Create an Account
 3. Click on the menu bar (top left side)
 4. Click on *Tools > Developer API*
@@ -105,7 +105,7 @@ How to Connect:
 🎬 Check out Video for Tutorial: 
    https://t.me/terabis/9
 
-For any confusion or help, contact [@ayushx2026_bot](https://t.me/ayushx2026_bot)
+For any confusion or help, contact @ayushx2026_bot
     `);
 });
 
