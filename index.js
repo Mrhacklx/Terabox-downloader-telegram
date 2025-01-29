@@ -106,9 +106,7 @@ How to Connect:
    https://t.me/terabis/9
 
 For any confusion or help, contact [@ayushx2026_bot](https://t.me/ayushx2026_bot)
-    `,
-    { parse_mode: "MarkdownV2" }
-  );
+    `);
 });
 
 
