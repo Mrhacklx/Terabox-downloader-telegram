@@ -101,6 +101,9 @@ How to Connect:
 6\\. Use this command: /connect YOUR\\_API\\_KEY
    Example: /connect 8268d7f25na2c690bk25d4k20fbc63p5p09d6906
 
+   🎬 Check out Video for Tutorial : 
+       https://t.me/terabis/9
+
 For any confusion or help, contact [@ayushx2026\\_bot](https://t.me/ayushx2026_bot)
     `,
     { parse_mode: "MarkdownV2" }
@@ -157,7 +160,7 @@ async function handleMediaMessage(ctx, Markup) {
   // Check if the user has connected their API key
   if (!userData[userId] || !userData[userId].apiKey) {
     return ctx.reply(
-      "⚠️ You haven't connected your API key yet. Please use /connect [API_KEY] to connect."
+      "⚠️ You haven't connected your API key yet. Please use /connect [API_KEY] to connect.\n\nFor API ID /help \n🎬 Check out Video for Tutorial : \nhttps://t.me/terabis/9"
     );
   }
 
