@@ -36,9 +36,25 @@ async function main() {
 
   // Handle /start command
   bot.start(async (ctx) => {
+    if (userData[userId]) {
+       ctx.reply(`📮 Hello ${ctx.message.from.first_name}, \nYou are now successfully connected to our Terabis platform.\n\nsend Tearbox link for converting`);
+    }
+    else{
     ctx.reply(
-      `Hi ${ctx.message.from.first_name},\n\nWelcome to the Terabis \n\nHow to connect /help`
-    );
+      `📮 Hello ${ctx.message.from.first_name} ,
+
+🌟 I am a bot to Convert Your terabox link to Your Links Directly to your Bisgram.com Account.
+
+You can login to your account by clicking on the button below, and entering your api key.
+
+💠 You can find your api key on 
+https://bisgram.com/member/tools/api
+
+ℹ Send me /help to get How to Use the Bot Guide.
+
+🎬 Check out Video for Tutorial :
+https://t.me/terabis/9`
+    );}
   });
 
   // Handle /connect command
@@ -54,7 +70,7 @@ async function main() {
     if (await validateApiKey(apiKey)) {
       userData[userId] = { apiKey };
       saveUserData();
-      ctx.reply("✅ API key connected successfully! You can now shorten links.");
+      ctx.reply("✅ API key connected successfully! send Tearbox link for converting");
     } else {
       ctx.reply("❌ Invalid API key. Please try again.\n\nHow to connect /help");
     }
