@@ -36,6 +36,7 @@ async function main() {
 
   // Handle /start command
   bot.start(async (ctx) => {
+    const userId = ctx.from.id;
     if (userData[userId]) {
        ctx.reply(`📮 Hello ${ctx.message.from.first_name}, \nYou are now successfully connected to our Terabis platform.\n\nsend Tearbox link for converting`);
     }
